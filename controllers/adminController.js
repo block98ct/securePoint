@@ -11,7 +11,7 @@ const {
   getAllPpeRequests,
   getAllIncidentReports,
   getAllApplication,
-  setPprRequestStatus,
+  setPpeRequestStatus,
   getAllDriverApplication,
   getBankDetail,
   getConditionDetail,
@@ -30,6 +30,7 @@ const {
   updateAdminOTPByEmail,
   updateAdminPasswordByEmail,
   updateAdminOtpToNullByEmail,
+  addLogs
 } = require("../models/admin.modal");
 
 const {
@@ -468,9 +469,9 @@ exports.allRequests = async (req, res) => {
 exports.setPpeStatus = async (req, res) => {
   const { id, status } = req.body;
   await checkIsAdmin(req);
-  // const { adminId } = req.decoded;
+  const { adminId } = req.decoded;
+  const adminResp = await fetchAdminById(adminId);
 
-  // const adminResp = await fetchAdminById(adminId);
 
   // if (adminResp[0].roll !== "superAdmin" && adminResp[0].roll !== "admin") {
   //   return res
@@ -483,9 +484,22 @@ exports.setPpeStatus = async (req, res) => {
   }
 
   try {
-    await setPprRequestStatus(status, id);
+    await setPpeRequestStatus(status, id);
     const approvedTime = new Date();
+    let logObj={
+      name: adminResp[0].name,
+      authority: adminResp[0].roll,
+      effectedData: `${status == 0?"Rejected": "Approved"} ppe request`,
+      timestamp: approvedTime,
+      action: "updated"
+
+    }
+    // adding logs
+    await addLogs(logObj)
     await updateApprovedDate(approvedTime, id);
+    
+
+    
     return res
       .status(200)
       .json({ success: true, message: Msg.ppeRequestUpdated });

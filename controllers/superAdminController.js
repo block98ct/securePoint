@@ -13,7 +13,7 @@ const { fetchUserByEmail, setUSerStatus,getUserData, userRegister } = require(".
 const Msg = require("../helpers/message");
 const { mail} = require("../helpers/emailPassword")
 
-const checkSuperAdmin = async(req)=>{
+const checkSuperAdmin = async(req, res)=>{
   const { adminId } = req.decoded;
   const adminResp = await fetchAdminById(adminId);
   
@@ -27,7 +27,7 @@ const checkSuperAdmin = async(req)=>{
 exports.resgisterAdmins = async (req, res) => {
   try {
     
-    await checkSuperAdmin(req)
+    await checkSuperAdmin(req, res)
     const { name, email, password, confirmPassword, contactNo } = req.body;
     const { adminId } = req.decoded;
     const adminResp = await fetchAdminById(adminId);
@@ -91,7 +91,7 @@ exports.regitserUsers= async(req, res)=>{
   try {
     const { adminId } = req.decoded;
     const adminResp = await fetchAdminById(adminId);
-    await checkSuperAdmin(req)
+    await checkSuperAdmin(req, res)
     const { name, email,  contactNo } = req.body;
     
 
@@ -172,7 +172,7 @@ exports.setStatusOfAdmins = async (req, res) => {
     // return res
     //     .status(200)
     //     .json({ success: true, message: Msg.ppeRequestUpdated });
-    await checkSuperAdmin(req)
+    await checkSuperAdmin(req, res)
     const { status, id, roll } = req.body;
 
     if (roll == "user") {
@@ -228,7 +228,7 @@ exports.allAdminsData = async(req, res)=>{
 exports.allUserData =async(req, res)=>{
     try {
        
-        await checkSuperAdmin(req)
+        await checkSuperAdmin(req, res)
         const userData = await getUserData()
         const formattedUserData = userData.map(user => ({
             id: user.id,
@@ -256,7 +256,7 @@ exports.allUserData =async(req, res)=>{
 
 exports.searchUserByData = async(req, res)=>{
   try {
-     await checkSuperAdmin(req)
+     await checkSuperAdmin(req, res)
      const { name, email, contactNo, status } = req.query;
 
      const userData = await getUserData();
@@ -318,9 +318,9 @@ exports.searchUserByData = async(req, res)=>{
 
 exports.searchAdminByData = async(req, res)=>{
   try {
-    await checkSuperAdmin(req)
+    await checkSuperAdmin(req, res)
     try {
-      await checkSuperAdmin(req)
+      await checkSuperAdmin(req, res)
       const { name, email, contactNo, status } = req.query;
  
       const userData = await getAdminData();
@@ -391,7 +391,7 @@ exports.searchAdminByData = async(req, res)=>{
 let logId = 1300;
 exports.allLogs= async(req,res)=>{
   try {
-    await checkSuperAdmin(req)
+    await checkSuperAdmin(req, res)
     const logsResponse = await getLogsData()
     const formattedData = await logsResponse.map((item, index)=>{
       return {
@@ -425,6 +425,155 @@ exports.allLogs= async(req,res)=>{
 
 }
 
+
+
+exports.logsByAuthority= async(req,res)=>{
+
+  
+  try {
+        await checkSuperAdmin(req, res)
+        const { authority } = req.query; 
+        await checkSuperAdmin(req, res);
+        const logsResponse = await getLogsData();
+        
+        const filteredLogs = logsResponse.filter((item) => item.authority === authority);
+    
+        const formattedData = filteredLogs.map((item, index) => {
+          const timestamp = new Date(item.timestamp);
+          const formattedTimestamp = timestamp.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          }) 
+            .replace('/', '-');
+          return {
+            id: item.id,
+            logId: logId + index,
+            name: item.name,
+            authority: item.authority,
+            effectedData: item.effectedData,
+            timestamp: formattedTimestamp,
+            action: item.action,
+          };
+        });
+    
+        return res.status(200).json({ success: true, data: formattedData });
+      } catch (error) {
+        console.log(error);
+        return res.status(201).send({
+          success: false,
+          msg: Msg.err,
+        });
+      }
+
+}
+
+
+exports.logsByAction= async(req,res)=>{
+  
+  
+  try {
+    await checkSuperAdmin(req, res)
+    const { action } = req.query; 
+    const logsResponse = await getLogsData();
+    
+    const filteredLogs = logsResponse.filter((item) => item.action === action);
+
+    const formattedData = filteredLogs.map((item, index) => {
+      const timestamp = new Date(item.timestamp);
+      const formattedTimestamp = timestamp.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }) 
+        .replace('/', '-');
+      return {
+        id: item.id,
+        logId: logId + index,
+        name: item.name,
+        authority: item.authority,
+        effectedData: item.effectedData,
+        timestamp: formattedTimestamp,
+        action: item.action,
+      };
+    });
+
+    return res.status(200).json({ success: true, data: formattedData });
+  } catch (error) {
+    console.log(error);
+    return res.status(201).send({
+      success: false,
+      msg: Msg.err,
+    });
+  }
+
+}
+
+
+exports.searchLogs = async(req, res)=>{
+  try {
+    await checkSuperAdmin(req, res)
+    const {name, authority, action} = req.query
+    const logsResponse = await getLogsData();
+    let filteredData = logsResponse;
+
+    // Filter by name
+    if (name) {
+      filteredData = filteredData.filter(item =>
+        item.name.toLowerCase().includes(req.query.name.toLowerCase())
+      );
+    }
+
+    // Filter by authority
+    if (authority) {
+      filteredData = filteredData.filter(item =>
+        item.authority.toLowerCase() === req.query.authority.toLowerCase()
+      );
+    }
+
+    // Filter by action
+    if (action) {
+      filteredData = filteredData.filter(item =>
+        item.action.toLowerCase().includes(req.query.action.toLowerCase())
+      );
+    }
+
+    const formattedData = await filteredData.map((item, index) => {
+      const formattedTimestamp = (new Date(item.timestamp)).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+      return {
+        id: item.id,
+        logId: logId + index,
+        name: item.name,
+        authority: item.authority,
+        effectedData: item.effectedData,
+        timestamp: formattedTimestamp,
+        action: item.action
+      };
+    });
+
+    return res.status(200).json({ success: true, data: formattedData });
+  } catch (error) {
+    console.log(error);
+    return res.status(201).send({
+      success: false,
+      msg: Msg.err,
+    });
+    
+  }
+}
 
 
 

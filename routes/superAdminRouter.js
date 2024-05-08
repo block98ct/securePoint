@@ -18,6 +18,12 @@ app.get("/searchUser", authenticateToken, controller.superAdminController.search
 //app.get("/sortUsers", authenticateToken, controller.superAdminController.sortUserByDate)
 
 app.get("/allLogs", authenticateToken, controller.superAdminController.allLogs)
+app.get("/logsByAuthority", authenticateToken, controller.superAdminController.logsByAuthority)
+app.get("/logsByAction", authenticateToken, controller.superAdminController.logsByAction)
+app.get("/searchLogs", authenticateToken, controller.superAdminController.searchLogs)
+
+
+
 
 
 

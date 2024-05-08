@@ -41,7 +41,7 @@ module.exports = {
     return db.query(`SELECT COUNT(*) AS totalEntries FROM acknowledge_details`);
   },
 
-  setPprRequestStatus: async (status, id) => {
+  setPpeRequestStatus: async (status, id) => {
     return db.query(`UPDATE ppe_request SET status = ? WHERE id = ?`, [
       status,
       id,

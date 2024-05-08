@@ -15,6 +15,7 @@ const {
   userRegister,
   fetchUserByEmail,
   fetchUserByActToken,
+  fetchUserById,
   updateUserByActToken,
   updatePassword,
   aboutYouForm,
@@ -45,6 +46,8 @@ const {
   updateAcknowledgeDetailsById,
   checkUserInAboutFormById,
 } = require("../models/user.model");
+
+const {addLogs } = require("../models/admin.modal")
 
 var transporter = nodemailer.createTransport({
   // service: 'gmail',
@@ -504,6 +507,8 @@ const checkUserId = async (userId) => {
 exports.registerDriverApplicationForm = async (req, res) => {
   let { userId } = req.decoded;
   const userIdExists = await checkUserId(userId);
+
+  const userResp = await fetchUserById(userId)
 
   // if (!userIdExists) {
   //   try {
@@ -982,6 +987,17 @@ exports.registerDriverApplicationForm = async (req, res) => {
  
      await acknowledgeDetails(acknowledgeForm);
      console.log("acknowledgeForm submitted successfully");
+
+     let logObj={
+      name: userResp[0].name,
+      authority: userResp[0].roll,
+      effectedData: "resgister driver application ",
+      timestamp: new Date(),
+      action: "created"
+
+    }
+    // adding logs
+    await addLogs(logObj)
      res
        .status(201)
        .json({ statusCode: 200, success: true, message: Msg.formSubmitted });
@@ -1138,6 +1154,7 @@ exports.ppeRecordHandle = async (req, res) => {
       hardHat: JSON.stringify(ppeRecordData.hardHat),
       userId: userId,
     };
+
 
     await ppeRecord(ppeRecordInfo);
 
