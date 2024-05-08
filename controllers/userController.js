@@ -37,7 +37,13 @@ const {
   getConditionInformation,
   getDriverStatement,
   setUserLoginStatus,
-  getLatestApplications
+  updateAboutYouFormById,
+  updateBackgroundInformationbyId,
+  updateVehicleExperienceById,
+  updatePersonalDetailsById,
+  updateBankDetailsById,
+  updateAcknowledgeDetailsById,
+  checkUserInAboutFormById,
 } = require("../models/user.model");
 
 var transporter = nodemailer.createTransport({
@@ -63,7 +69,7 @@ transporter.use("compile", hbs(handlebarOptions));
 
 exports.userRegister = async (req, res) => {
   try {
-    let { name,email, mobileNumber, password } = req.body;
+    let { name, email, mobileNumber, password } = req.body;
     const act_token = await generateRandomString(8);
     let checkUser = await fetchUserByEmail(email);
     if (checkUser.length !== 0) {
@@ -133,8 +139,8 @@ exports.userLogin = async (req, res) => {
         if (checkUser[0].isVerified) {
           const payload = { userId: checkUser[0].id };
           const token = jwt.sign(payload, secretKey, { expiresIn: "1h" });
-          const loginTime = new Date()
-          await setUserLoginStatus(loginTime, email)
+          const loginTime = new Date();
+          await setUserLoginStatus(loginTime, email);
 
           return res.status(200).send({
             status: true,
@@ -310,210 +316,714 @@ exports.changePassword = async (req, res) => {
   }
 };
 //**-------function to use register driver application form---------- */
-exports.registerDriverApplicationForm = async (req, res) => {
+// exports.registerDriverApplicationForm = async (req, res) => {
+//   try {
+//     let { userId } = req.decoded;
+
+//     const aboutYouData = req.body.find(
+//       (form) => form.formName === "About You"
+//     ).formData;
+//     const backgroundInfoData = req.body.find(
+//       (form) => form.formName === "Background Information"
+//     ).formData;
+//     const vehicleExperienceData = req.body.find(
+//       (form) => form.formName === "Vehicle Experience"
+//     ).formData;
+//     const personalDetailData = req.body.find(
+//       (form) => form.formName === "Personal Detail"
+//     ).formData;
+//     const bankDetailData = req.body.find(
+//       (form) => form.formName === "Bank Detail"
+//     ).formData;
+//     const acknoledgeData = req.body.find(
+//       (form) => form.formName === "Acknowledge Detail"
+//     ).formData;
+
+//     //   console.log("aboutYourData", aboutYouData.firstName);
+//     //   console.log("backgroundInfoData", backgroundInfoData);
+//     //   console.log("vehicleExperienceData", vehicleExperienceData);
+//     //   console.log("personalDetailData", personalDetailData);
+//     //   console.log("bankDetailData", bankDetailData);
+//     //   console.log("acknoledgeData", acknoledgeData);
+
+//     //   console.log("backgroundInfoData", backgroundInfoData);
+//     //   console.log("vehicleExperienceData", vehicleExperienceData);
+//     try {
+//       const aboutYouObj = {
+//         firstName: aboutYouData.firstName,
+//         lastName: aboutYouData.lastName,
+//         addressline1: aboutYouData.addressline1,
+//         addressline2: aboutYouData.addressline2,
+//         country: aboutYouData.country,
+//         townCity: aboutYouData.townCity,
+//         postcode: aboutYouData.postcode,
+//         mobileNumber: aboutYouData.mobileNumber,
+//         nationalInsuranceNumber: aboutYouData.nationalInsuranceNumber,
+//         email: aboutYouData.email,
+//         nextofKinfirstname: aboutYouData.nextofKinfirstname,
+//         nextofKinlastname: aboutYouData.nextofKinlastname,
+//         userId: userId,
+//         nextofKinMobileNumber: aboutYouData.nextofKinMobileNumber,
+//       };
+//       await aboutYouForm(aboutYouObj);
+//       // console.log(aboutYouForms)
+
+//       console.log("about form submitted successfully");
+
+//       const backgroundInfo = {
+//         hasCriminalConvictions:
+//           backgroundInfoData.hasCriminalConvictions === "Yes",
+//         convictionDetails:
+//           backgroundInfoData.hasCriminalConvictions === "Yes"
+//             ? JSON.stringify(backgroundInfoData.convictionDetails)
+//             : null,
+//         drugAlcoholTest: backgroundInfoData.drugAlcoholTest === "Yes",
+//         participateInRandomSearches:
+//           backgroundInfoData.participateInRandomSearches === "Yes",
+//         preferNotPlaced: backgroundInfoData.preferNotPlaced === "Yes",
+//         companyDetails:
+//           backgroundInfoData.preferNotPlaced === "Yes"
+//             ? JSON.stringify(backgroundInfoData.companyDetails)
+//             : null,
+//         hasAccidentsLast12Months:
+//           backgroundInfoData.hasAccidentsLast12Months === "Yes",
+//         accidentDetails:
+//           backgroundInfoData.hasAccidentsLast12Months === "Yes"
+//             ? JSON.stringify(backgroundInfoData.accidentDetails)
+//             : null,
+//         userId: userId,
+//       };
+
+//       await backgroundInformation(backgroundInfo);
+//       console.log("backgroundInfo submitted successfully");
+//     } catch (error) {
+//       console.log(error);
+//       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+//     }
+
+//     try {
+//       const vehicleExperienceForm = {
+//         vehicleExperience: JSON.stringify(
+//           vehicleExperienceData.vehicleExperience
+//         ),
+//         vehicleSkills: JSON.stringify(vehicleExperienceData.vehicleSkills),
+//         licenseNumber: vehicleExperienceData.licenseNumber,
+//         licenseExpiryDate: vehicleExperienceData.licenseExpiryDate,
+//         digiTachoNumber: parseInt(vehicleExperienceData.digiTachoNumber),
+//         digiTachoExpiryDate: vehicleExperienceData.digiTachoExpiryDate,
+//         CPC_CardExpiryDate: vehicleExperienceData.CPC_CardExpiryDate,
+//         modulesRequired: vehicleExperienceData.modulesRequired === "Yes",
+//         modeDetails:
+//           vehicleExperienceData.modulesRequired === "Yes"
+//             ? JSON.stringify(vehicleExperienceData.modeDetails)
+//             : null,
+//         penaltyPoints: parseInt(vehicleExperienceData.panaltyPoints),
+//         hasPenaltyPending: vehicleExperienceData.hasPanaltyPending === "Yes",
+//         userId: userId,
+//       };
+
+//       await vehicleExperience(vehicleExperienceForm);
+
+//       console.log("vehicleExperienceForm submitted successfully");
+//     } catch (error) {
+//       console.log(error);
+//       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+//     }
+
+//     try {
+//       const personalDetailForm = {
+//         hasYouSmoke: personalDetailData.hasYouSmoke === "Yes",
+//         smokingOptions:
+//           personalDetailData.hasYouSmoke === "Yes"
+//             ? JSON.stringify(personalDetailData.smokingOptions)
+//             : null,
+//         hasAnyPrescribedMedication:
+//           personalDetailData.hasAnyPrescribedMedication === "Yes",
+//         medicationDetails:
+//           personalDetailData.hasAnyPrescribedMedication === "Yes"
+//             ? JSON.stringify(personalDetailData.medicationDetails)
+//             : null,
+//       };
+//       await personalDetails(personalDetailForm);
+//       console.log("personalDetailForm submitted successfully");
+//     } catch (error) {
+//       console.log(error);
+//       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+//     }
+
+//     try {
+//       const bankDetailForm = {
+//         bankOrBuildingSocietyName: bankDetailData.bankOrBuildingSocietyName,
+//         nameOnAccount: bankDetailData.nameOnAccount,
+//         sortCode: bankDetailData.sortCode,
+//         accountNumber: bankDetailData.accountNumber,
+//         employmentHistoryDetails: JSON.stringify(
+//           bankDetailData.employmentHistoryDetails
+//         ),
+//         userId: userId,
+//       };
+
+//       await bankDetails(bankDetailForm);
+//       console.log("bankDetailForm submitted successfully");
+//     } catch (error) {
+//       console.log(error);
+//       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+//     }
+
+//     const acknowledgeForm = {
+//       firstName: acknoledgeData.firstName,
+//       lastName: acknoledgeData.lastName,
+//       signatureUrl: acknoledgeData.signatureUrl,
+//       userId: userId,
+//     };
+
+//     await acknowledgeDetails(acknowledgeForm);
+//     console.log("acknowledgeForm submitted successfully");
+//     res
+//       .status(201)
+//       .json({ statusCode: 200, success: true, message: Msg.formSubmitted });
+//   } catch (error) {
+//     console.error("Error occurred:", error);
+//     res
+//       .status(501)
+//       .json({ statusCode: 500, sucess: false, error: Msg.internalError });
+//   }
+
+// };
+
+const checkUserId = async (userId) => {
   try {
-    let { userId } = req.decoded;
-    // Save data from each form in respective tables within the same transaction  
-
-    const aboutYouData = req.body.find(
-      (form) => form.formName === "About You"
-    ).formData;
-    const backgroundInfoData = req.body.find(
-      (form) => form.formName === "Background Information"
-    ).formData;
-    const vehicleExperienceData = req.body.find(
-      (form) => form.formName === "Vehicle Experience"
-    ).formData;
-    const personalDetailData = req.body.find(
-      (form) => form.formName === "Personal Detail"
-    ).formData;
-    const bankDetailData = req.body.find(
-      (form) => form.formName === "Bank Detail"
-    ).formData;
-    const acknoledgeData = req.body.find(
-      (form) => form.formName === "Acknowledge Detail"
-    ).formData;
-
-    //   console.log("aboutYourData", aboutYouData.firstName);
-    //   console.log("backgroundInfoData", backgroundInfoData);
-    //   console.log("vehicleExperienceData", vehicleExperienceData);
-    //   console.log("personalDetailData", personalDetailData);
-    //   console.log("bankDetailData", bankDetailData);
-    //   console.log("acknoledgeData", acknoledgeData);
-
-    //   console.log("backgroundInfoData", backgroundInfoData);
-    //   console.log("vehicleExperienceData", vehicleExperienceData);
-    try {
-      const aboutYouObj = {
-        firstName: aboutYouData.firstName,
-        lastName: aboutYouData.lastName,
-        addressline1: aboutYouData.addressline1,
-        addressline2: aboutYouData.addressline2,
-        country: aboutYouData.country,
-        townCity: aboutYouData.townCity,
-        postcode: aboutYouData.postcode,
-        mobileNumber: aboutYouData.mobileNumber,
-        nationalInsuranceNumber: aboutYouData.nationalInsuranceNumber,
-        email: aboutYouData.email,
-        nextofKinfirstname: aboutYouData.nextofKinfirstname,
-        nextofKinlastname: aboutYouData.nextofKinlastname,
-        userId: userId,
-        nextofKinMobileNumber: aboutYouData.nextofKinMobileNumber,
-      };
-      await aboutYouForm(aboutYouObj);
-      // console.log(aboutYouForms)
-
-      console.log("about form submitted successfully");
-
-      const backgroundInfo = {
-        hasCriminalConvictions:
-          backgroundInfoData.hasCriminalConvictions === "Yes",
-        convictionDetails:
-          backgroundInfoData.hasCriminalConvictions === "Yes"
-            ? JSON.stringify(backgroundInfoData.convictionDetails)
-            : null,
-        drugAlcoholTest: backgroundInfoData.drugAlcoholTest === "Yes",
-        participateInRandomSearches:
-          backgroundInfoData.participateInRandomSearches === "Yes",
-        preferNotPlaced: backgroundInfoData.preferNotPlaced === "Yes",
-        companyDetails:
-          backgroundInfoData.preferNotPlaced === "Yes"
-            ? JSON.stringify(backgroundInfoData.companyDetails)
-            : null,
-        hasAccidentsLast12Months:
-          backgroundInfoData.hasAccidentsLast12Months === "Yes",
-        accidentDetails:
-          backgroundInfoData.hasAccidentsLast12Months === "Yes"
-            ? JSON.stringify(backgroundInfoData.accidentDetails)
-            : null,
-        userId: userId,
-      };
-
-      await backgroundInformation(backgroundInfo);
-      console.log("backgroundInfo submitted successfully");
-    } catch (error) {
-      console.log(error);
-      res.status(501).json({ statusCode: 500, sucess: false, error: error });
-    }
-
-    try {
-      const vehicleExperienceForm = {
-        vehicleExperience: JSON.stringify(
-          vehicleExperienceData.vehicleExperience
-        ),
-        vehicleSkills: JSON.stringify(vehicleExperienceData.vehicleSkills),
-        licenseNumber: vehicleExperienceData.licenseNumber,
-        licenseExpiryDate: vehicleExperienceData.licenseExpiryDate,
-        digiTachoNumber: parseInt(vehicleExperienceData.digiTachoNumber),
-        digiTachoExpiryDate: vehicleExperienceData.digiTachoExpiryDate,
-        CPC_CardExpiryDate: vehicleExperienceData.CPC_CardExpiryDate,
-        modulesRequired: vehicleExperienceData.modulesRequired === "Yes",
-        modeDetails:
-          vehicleExperienceData.modulesRequired === "Yes"
-            ? JSON.stringify(vehicleExperienceData.modeDetails)
-            : null,
-        penaltyPoints: parseInt(vehicleExperienceData.panaltyPoints),
-        hasPenaltyPending: vehicleExperienceData.hasPanaltyPending === "Yes",
-        userId: userId,
-      };
-
-      await vehicleExperience(vehicleExperienceForm);
-
-      console.log("vehicleExperienceForm submitted successfully");
-    } catch (error) {
-      console.log(error);
-      res.status(501).json({ statusCode: 500, sucess: false, error: error });
-    }
-
-    try {
-      const personalDetailForm = {
-        hasYouSmoke: personalDetailData.hasYouSmoke === "Yes",
-        smokingOptions:
-          personalDetailData.hasYouSmoke === "Yes"
-            ? JSON.stringify(personalDetailData.smokingOptions)
-            : null,
-        hasAnyPrescribedMedication:
-          personalDetailData.hasAnyPrescribedMedication === "Yes",
-        medicationDetails:
-          personalDetailData.hasAnyPrescribedMedication === "Yes"
-            ? JSON.stringify(personalDetailData.medicationDetails)
-            : null,
-      };
-      await personalDetails(personalDetailForm);
-      console.log("personalDetailForm submitted successfully");
-    } catch (error) {
-      console.log(error);
-      res.status(501).json({ statusCode: 500, sucess: false, error: error });
-    }
-
-    try {
-      const bankDetailForm = {    
-        bankOrBuildingSocietyName: bankDetailData.bankOrBuildingSocietyName,
-        nameOnAccount: bankDetailData.nameOnAccount,
-        sortCode: bankDetailData.sortCode,
-        accountNumber: bankDetailData.accountNumber,
-        employmentHistoryDetails: JSON.stringify(
-          bankDetailData.employmentHistoryDetails
-        ),
-        userId: userId,
-      };
-
-      await bankDetails(bankDetailForm);
-      console.log("bankDetailForm submitted successfully");
-    } catch (error) {
-      console.log(error);
-      res.status(501).json({ statusCode: 500, sucess: false, error: error });
-    }
-
-    const acknowledgeForm = {
-      firstName: acknoledgeData.firstName,
-      lastName: acknoledgeData.lastName,
-      signatureUrl: acknoledgeData.signatureUrl,
-      userId: userId,
-    };
-
-    await acknowledgeDetails(acknowledgeForm);
-    console.log("acknowledgeForm submitted successfully");
-    res
-      .status(201)
-      .json({ statusCode: 200, success: true, message: Msg.formSubmitted });
+    const [rows] = await checkUserInAboutFormById(userId);
+    const count = rows.count;
+    console.log(count);
+    return count > 0;
   } catch (error) {
+    throw error;
+  }
+};
+exports.registerDriverApplicationForm = async (req, res) => {
+  let { userId } = req.decoded;
+  const userIdExists = await checkUserId(userId);
+
+  // if (!userIdExists) {
+  //   try {
+  //     const aboutYouData = req.body.find(
+  //       (form) => form.formName === "About You"
+  //     ).formData;
+  //     const backgroundInfoData = req.body.find(
+  //       (form) => form.formName === "Background Information"
+  //     ).formData;
+  //     const vehicleExperienceData = req.body.find(
+  //       (form) => form.formName === "Vehicle Experience"
+  //     ).formData;
+  //     const personalDetailData = req.body.find(
+  //       (form) => form.formName === "Personal Detail"
+  //     ).formData;
+  //     const bankDetailData = req.body.find(
+  //       (form) => form.formName === "Bank Detail"
+  //     ).formData;
+  //     const acknoledgeData = req.body.find(
+  //       (form) => form.formName === "Acknowledge Detail"
+  //     ).formData;
+
+  //     //   console.log("aboutYourData", aboutYouData.firstName);
+  //     //   console.log("backgroundInfoData", backgroundInfoData);
+  //     //   console.log("vehicleExperienceData", vehicleExperienceData);
+  //     //   console.log("personalDetailData", personalDetailData);
+  //     //   console.log("bankDetailData", bankDetailData);
+  //     //   console.log("acknoledgeData", acknoledgeData);
+
+  //     //   console.log("backgroundInfoData", backgroundInfoData);
+  //     //   console.log("vehicleExperienceData", vehicleExperienceData);
+  //     try {
+  //       const aboutYouObj = {
+  //         firstName: aboutYouData.firstName,
+  //         lastName: aboutYouData.lastName,
+  //         addressline1: aboutYouData.addressline1,
+  //         addressline2: aboutYouData.addressline2,
+  //         country: aboutYouData.country,
+  //         townCity: aboutYouData.townCity,
+  //         postcode: aboutYouData.postcode,
+  //         mobileNumber: aboutYouData.mobileNumber,
+  //         nationalInsuranceNumber: aboutYouData.nationalInsuranceNumber,
+  //         email: aboutYouData.email,
+  //         nextofKinfirstname: aboutYouData.nextofKinfirstname,
+  //         nextofKinlastname: aboutYouData.nextofKinlastname,
+  //         userId: userId,
+  //         nextofKinMobileNumber: aboutYouData.nextofKinMobileNumber,
+  //       };
+  //       await aboutYouForm(aboutYouObj);
+  //       // console.log(aboutYouForms)
+
+  //       console.log("about form submitted successfully");
+
+  //       const backgroundInfo = {
+  //         hasCriminalConvictions:
+  //           backgroundInfoData.hasCriminalConvictions === "Yes",
+  //         convictionDetails:
+  //           backgroundInfoData.hasCriminalConvictions === "Yes"
+  //             ? JSON.stringify(backgroundInfoData.convictionDetails)
+  //             : null,
+  //         drugAlcoholTest: backgroundInfoData.drugAlcoholTest === "Yes",
+  //         participateInRandomSearches:
+  //           backgroundInfoData.participateInRandomSearches === "Yes",
+  //         preferNotPlaced: backgroundInfoData.preferNotPlaced === "Yes",
+  //         companyDetails:
+  //           backgroundInfoData.preferNotPlaced === "Yes"
+  //             ? JSON.stringify(backgroundInfoData.companyDetails)
+  //             : null,
+  //         hasAccidentsLast12Months:
+  //           backgroundInfoData.hasAccidentsLast12Months === "Yes",
+  //         accidentDetails:
+  //           backgroundInfoData.hasAccidentsLast12Months === "Yes"
+  //             ? JSON.stringify(backgroundInfoData.accidentDetails)
+  //             : null,
+  //         userId: userId,
+  //       };
+
+  //       await backgroundInformation(backgroundInfo);
+  //       console.log("backgroundInfo submitted successfully");
+  //     } catch (error) {
+  //       console.log(error);
+  //       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+  //     }
+
+  //     try {
+  //       const vehicleExperienceForm = {
+  //         vehicleExperience: JSON.stringify(
+  //           vehicleExperienceData.vehicleExperience
+  //         ),
+  //         vehicleSkills: JSON.stringify(vehicleExperienceData.vehicleSkills),
+  //         licenseNumber: vehicleExperienceData.licenseNumber,
+  //         licenseExpiryDate: vehicleExperienceData.licenseExpiryDate,
+  //         digiTachoNumber: parseInt(vehicleExperienceData.digiTachoNumber),
+  //         digiTachoExpiryDate: vehicleExperienceData.digiTachoExpiryDate,
+  //         CPC_CardExpiryDate: vehicleExperienceData.CPC_CardExpiryDate,
+  //         modulesRequired: vehicleExperienceData.modulesRequired === "Yes",
+  //         modeDetails:
+  //           vehicleExperienceData.modulesRequired === "Yes"
+  //             ? JSON.stringify(vehicleExperienceData.modeDetails)
+  //             : null,
+  //         penaltyPoints: parseInt(vehicleExperienceData.panaltyPoints),
+  //         hasPenaltyPending: vehicleExperienceData.hasPanaltyPending === "Yes",
+  //         userId: userId,
+  //       };
+
+  //       await vehicleExperience(vehicleExperienceForm);
+
+  //       console.log("vehicleExperienceForm submitted successfully");
+  //     } catch (error) {
+  //       console.log(error);
+  //       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+  //     }
+
+  //     try {
+  //       const personalDetailForm = {
+  //         hasYouSmoke: personalDetailData.hasYouSmoke === "Yes",
+  //         smokingOptions:
+  //           personalDetailData.hasYouSmoke === "Yes"
+  //             ? JSON.stringify(personalDetailData.smokingOptions)
+  //             : null,
+  //         hasAnyPrescribedMedication:
+  //           personalDetailData.hasAnyPrescribedMedication === "Yes",
+  //         medicationDetails:
+  //           personalDetailData.hasAnyPrescribedMedication === "Yes"
+  //             ? JSON.stringify(personalDetailData.medicationDetails)
+  //             : null,
+  //       };
+  //       await personalDetails(personalDetailForm);
+  //       console.log("personalDetailForm submitted successfully");
+  //     } catch (error) {
+  //       console.log(error);
+  //       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+  //     }
+
+  //     try {
+  //       const bankDetailForm = {
+  //         bankOrBuildingSocietyName: bankDetailData.bankOrBuildingSocietyName,
+  //         nameOnAccount: bankDetailData.nameOnAccount,
+  //         sortCode: bankDetailData.sortCode,
+  //         accountNumber: bankDetailData.accountNumber,
+  //         employmentHistoryDetails: JSON.stringify(
+  //           bankDetailData.employmentHistoryDetails
+  //         ),
+  //         userId: userId,
+  //       };
+
+  //       await bankDetails(bankDetailForm);
+  //       console.log("bankDetailForm submitted successfully");
+  //     } catch (error) {
+  //       console.log(error);
+  //       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+  //     }
+
+  //     const acknowledgeForm = {
+  //       firstName: acknoledgeData.firstName,
+  //       lastName: acknoledgeData.lastName,
+  //       signatureUrl: acknoledgeData.signatureUrl,
+  //       userId: userId,
+  //     };
+
+  //     await acknowledgeDetails(acknowledgeForm);
+  //     console.log("acknowledgeForm submitted successfully");
+  //     res
+  //       .status(201)
+  //       .json({ statusCode: 200, success: true, message: Msg.formSubmitted });
+  //   } catch (error) {
+  //     console.error("Error occurred:", error);
+  //     res
+  //       .status(501)
+  //       .json({ statusCode: 500, sucess: false, error: Msg.internalError });
+  //   }
+
+  // }else{
+  //   try {
+  //     // updateAboutYouFormById,
+  //     // updateBackgroundInformationbyId,
+  //     // updateVehicleExperienceById,
+  //     // updatePersonalDetailsById,
+  //     // updateBankDetailsById,
+  //     // updateAcknowledgeDetailsById
+  //     const aboutYouData = req.body.find(
+  //       (form) => form.formName === "About You"
+  //     ).formData;
+  //     const backgroundInfoData = req.body.find(
+  //       (form) => form.formName === "Background Information"
+  //     ).formData;
+  //     const vehicleExperienceData = req.body.find(
+  //       (form) => form.formName === "Vehicle Experience"
+  //     ).formData;
+  //     const personalDetailData = req.body.find(
+  //       (form) => form.formName === "Personal Detail"
+  //     ).formData;
+  //     const bankDetailData = req.body.find(
+  //       (form) => form.formName === "Bank Detail"
+  //     ).formData;
+  //     const acknoledgeData = req.body.find(
+  //       (form) => form.formName === "Acknowledge Detail"
+  //     ).formData;
+
+  //     //   console.log("aboutYourData", aboutYouData.firstName);
+  //     //   console.log("backgroundInfoData", backgroundInfoData);
+  //     //   console.log("vehicleExperienceData", vehicleExperienceData);
+  //     //   console.log("personalDetailData", personalDetailData);
+  //     //   console.log("bankDetailData", bankDetailData);
+  //     //   console.log("acknoledgeData", acknoledgeData);
+
+  //     //   console.log("backgroundInfoData", backgroundInfoData);
+  //     //   console.log("vehicleExperienceData", vehicleExperienceData);
+  //     try {
+  //       const aboutYouObj = {
+  //         firstName: aboutYouData.firstName,
+  //         lastName: aboutYouData.lastName,
+  //         addressline1: aboutYouData.addressline1,
+  //         addressline2: aboutYouData.addressline2,
+  //         country: aboutYouData.country,
+  //         townCity: aboutYouData.townCity,
+  //         postcode: aboutYouData.postcode,
+  //         mobileNumber: aboutYouData.mobileNumber,
+  //         nationalInsuranceNumber: aboutYouData.nationalInsuranceNumber,
+  //         email: aboutYouData.email,
+  //         nextofKinfirstname: aboutYouData.nextofKinfirstname,
+  //         nextofKinlastname: aboutYouData.nextofKinlastname,
+  //         userId: userId,
+  //         nextofKinMobileNumber: aboutYouData.nextofKinMobileNumber,
+  //       };
+  //       await updateAboutYouFormById(aboutYouObj, userId);
+  //       // console.log(aboutYouForms)
+
+  //       console.log("about form submitted successfully");
+
+  //       const backgroundInfo = {
+  //         hasCriminalConvictions:
+  //           backgroundInfoData.hasCriminalConvictions === "Yes",
+  //         convictionDetails:
+  //           backgroundInfoData.hasCriminalConvictions === "Yes"
+  //             ? JSON.stringify(backgroundInfoData.convictionDetails)
+  //             : null,
+  //         drugAlcoholTest: backgroundInfoData.drugAlcoholTest === "Yes",
+  //         participateInRandomSearches:
+  //           backgroundInfoData.participateInRandomSearches === "Yes",
+  //         preferNotPlaced: backgroundInfoData.preferNotPlaced === "Yes",
+  //         companyDetails:
+  //           backgroundInfoData.preferNotPlaced === "Yes"
+  //             ? JSON.stringify(backgroundInfoData.companyDetails)
+  //             : null,
+  //         hasAccidentsLast12Months:
+  //           backgroundInfoData.hasAccidentsLast12Months === "Yes",
+  //         accidentDetails:
+  //           backgroundInfoData.hasAccidentsLast12Months === "Yes"
+  //             ? JSON.stringify(backgroundInfoData.accidentDetails)
+  //             : null,
+  //         userId: userId,
+  //       };
+
+  //       await updateBackgroundInformationbyId(backgroundInfo, userId);
+  //       console.log("backgroundInfo submitted successfully");
+  //     } catch (error) {
+  //       console.log(error);
+  //       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+  //     }
+
+  //     try {
+  //       const vehicleExperienceForm = {
+  //         vehicleExperience: JSON.stringify(
+  //           vehicleExperienceData.vehicleExperience
+  //         ),
+  //         vehicleSkills: JSON.stringify(vehicleExperienceData.vehicleSkills),
+  //         licenseNumber: vehicleExperienceData.licenseNumber,
+  //         licenseExpiryDate: vehicleExperienceData.licenseExpiryDate,
+  //         digiTachoNumber: parseInt(vehicleExperienceData.digiTachoNumber),
+  //         digiTachoExpiryDate: vehicleExperienceData.digiTachoExpiryDate,
+  //         CPC_CardExpiryDate: vehicleExperienceData.CPC_CardExpiryDate,
+  //         modulesRequired: vehicleExperienceData.modulesRequired === "Yes",
+  //         modeDetails:
+  //           vehicleExperienceData.modulesRequired === "Yes"
+  //             ? JSON.stringify(vehicleExperienceData.modeDetails)
+  //             : null,
+  //         penaltyPoints: parseInt(vehicleExperienceData.panaltyPoints),
+  //         hasPenaltyPending: vehicleExperienceData.hasPanaltyPending === "Yes",
+  //         userId: userId,
+  //       };
+
+  //       await updateVehicleExperienceById(vehicleExperienceForm, userId);
+
+  //       console.log("vehicleExperienceForm submitted successfully");
+  //     } catch (error) {
+  //       console.log(error);
+  //       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+  //     }
+
+  //     try {
+  //       const personalDetailForm = {
+  //         hasYouSmoke: personalDetailData.hasYouSmoke === "Yes",
+  //         smokingOptions:
+  //           personalDetailData.hasYouSmoke === "Yes"
+  //             ? JSON.stringify(personalDetailData.smokingOptions)
+  //             : null,
+  //         hasAnyPrescribedMedication:
+  //           personalDetailData.hasAnyPrescribedMedication === "Yes",
+  //         medicationDetails:
+  //           personalDetailData.hasAnyPrescribedMedication === "Yes"
+  //             ? JSON.stringify(personalDetailData.medicationDetails)
+  //             : null,
+  //       };
+  //       await updatePersonalDetailsById(personalDetailForm, userId);
+  //       console.log("personalDetailForm submitted successfully");
+  //     } catch (error) {
+  //       console.log(error);
+  //       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+  //     }
+
+  //     try {
+  //       const bankDetailForm = {
+  //         bankOrBuildingSocietyName: bankDetailData.bankOrBuildingSocietyName,
+  //         nameOnAccount: bankDetailData.nameOnAccount,
+  //         sortCode: bankDetailData.sortCode,
+  //         accountNumber: bankDetailData.accountNumber,
+  //         employmentHistoryDetails: JSON.stringify(
+  //           bankDetailData.employmentHistoryDetails
+  //         ),
+  //         userId: userId,
+  //       };
+
+  //       await updateBankDetailsById(bankDetailForm, userId);
+  //       console.log("bankDetailForm submitted successfully");
+  //     } catch (error) {
+  //       console.log(error);
+  //       res.status(501).json({ statusCode: 500, sucess: false, error: error });
+  //     }
+
+  //     const acknowledgeForm = {
+  //       firstName: acknoledgeData.firstName,
+  //       lastName: acknoledgeData.lastName,
+  //       signatureUrl: acknoledgeData.signatureUrl,
+  //       userId: userId,
+  //     };
+
+  //     await updateAcknowledgeDetailsById(acknowledgeForm, userId);
+  //     console.log("acknowledgeForm submitted successfully");
+  //     res
+  //       .status(201)
+  //       .json({ statusCode: 200, success: true, message: "form updated" });
+  //   } catch (error) {
+  //     console.error("Error occurred:", error);
+  //     res
+  //       .status(501)
+  //       .json({ statusCode: 500, sucess: false, error: Msg.internalError });
+  //   }
+
+  // }
+  const aboutYouData = req.body.find(
+    (form) => form.formName === "About You"
+  ).formData;
+  const backgroundInfoData = req.body.find(
+    (form) => form.formName === "Background Information"
+  ).formData;
+  const vehicleExperienceData = req.body.find(
+    (form) => form.formName === "Vehicle Experience"
+  ).formData;
+  const personalDetailData = req.body.find(
+    (form) => form.formName === "Personal Detail"
+  ).formData;
+  const bankDetailData = req.body.find(
+    (form) => form.formName === "Bank Detail"
+  ).formData;
+  const acknoledgeData = req.body.find(
+    (form) => form.formName === "Acknowledge Detail"
+  ).formData;
+
+  const aboutYouObj = {
+    firstName: aboutYouData.firstName,
+    lastName: aboutYouData.lastName,
+    addressline1: aboutYouData.addressline1,
+    addressline2: aboutYouData.addressline2,
+    country: aboutYouData.country,
+    townCity: aboutYouData.townCity,
+    postcode: aboutYouData.postcode,
+    mobileNumber: aboutYouData.mobileNumber,
+    nationalInsuranceNumber: aboutYouData.nationalInsuranceNumber,
+    email: aboutYouData.email,
+    nextofKinfirstname: aboutYouData.nextofKinfirstname,
+    nextofKinlastname: aboutYouData.nextofKinlastname,
+    userId: userId,
+    nextofKinMobileNumber: aboutYouData.nextofKinMobileNumber,
+  };
+
+  const backgroundInfo = {
+    hasCriminalConvictions: backgroundInfoData.hasCriminalConvictions === "Yes",
+    convictionDetails:
+      backgroundInfoData.hasCriminalConvictions === "Yes"
+        ? JSON.stringify(backgroundInfoData.convictionDetails)
+        : null,
+    drugAlcoholTest: backgroundInfoData.drugAlcoholTest === "Yes",
+    participateInRandomSearches:
+      backgroundInfoData.participateInRandomSearches === "Yes",
+    preferNotPlaced: backgroundInfoData.preferNotPlaced === "Yes",
+    companyDetails:
+      backgroundInfoData.preferNotPlaced === "Yes"
+        ? JSON.stringify(backgroundInfoData.companyDetails)
+        : null,
+    hasAccidentsLast12Months:
+      backgroundInfoData.hasAccidentsLast12Months === "Yes",
+    accidentDetails:
+      backgroundInfoData.hasAccidentsLast12Months === "Yes"
+        ? JSON.stringify(backgroundInfoData.accidentDetails)
+        : null,
+    userId: userId,
+  };
+
+  const vehicleExperienceForm = {
+    vehicleExperience: JSON.stringify(vehicleExperienceData.vehicleExperience),
+    vehicleSkills: JSON.stringify(vehicleExperienceData.vehicleSkills),
+    licenseNumber: vehicleExperienceData.licenseNumber,
+    licenseExpiryDate: vehicleExperienceData.licenseExpiryDate,
+    digiTachoNumber: parseInt(vehicleExperienceData.digiTachoNumber),
+    digiTachoExpiryDate: vehicleExperienceData.digiTachoExpiryDate,
+    CPC_CardExpiryDate: vehicleExperienceData.CPC_CardExpiryDate,
+    modulesRequired: vehicleExperienceData.modulesRequired === "Yes",
+    modeDetails:
+      vehicleExperienceData.modulesRequired === "Yes"
+        ? JSON.stringify(vehicleExperienceData.modeDetails)
+        : null,
+    penaltyPoints: parseInt(vehicleExperienceData.panaltyPoints),
+    hasPenaltyPending: vehicleExperienceData.hasPanaltyPending === "Yes",
+    userId: userId,
+  };
+
+  const personalDetailForm = {
+    hasYouSmoke: personalDetailData.hasYouSmoke === "Yes",
+    smokingOptions:
+      personalDetailData.hasYouSmoke === "Yes"
+        ? JSON.stringify(personalDetailData.smokingOptions)
+        : null,
+    hasAnyPrescribedMedication:
+      personalDetailData.hasAnyPrescribedMedication === "Yes",
+    medicationDetails:
+      personalDetailData.hasAnyPrescribedMedication === "Yes"
+        ? JSON.stringify(personalDetailData.medicationDetails)
+        : null,
+  };
+
+  const bankDetailForm = {
+    bankOrBuildingSocietyName: bankDetailData.bankOrBuildingSocietyName,
+    nameOnAccount: bankDetailData.nameOnAccount,
+    sortCode: bankDetailData.sortCode,
+    accountNumber: bankDetailData.accountNumber,
+    employmentHistoryDetails: JSON.stringify(
+      bankDetailData.employmentHistoryDetails
+    ),
+    userId: userId,
+  };
+
+  const acknowledgeForm = {
+    firstName: acknoledgeData.firstName,
+    lastName: acknoledgeData.lastName,
+    signatureUrl: acknoledgeData.signatureUrl,
+    userId: userId,
+  };
+
+  if (!userIdExists) {
+   try {
+     await aboutYouForm(aboutYouObj);
+     console.log("about form submitted successfully");
+ 
+     await backgroundInformation(backgroundInfo);
+     console.log("backgroundInfo submitted successfully");
+ 
+     await vehicleExperience(vehicleExperienceForm);
+     console.log("vehicleExperienceForm submitted successfully");
+ 
+     await personalDetails(personalDetailForm);
+     console.log("personalDetailForm submitted successfully");
+ 
+     await bankDetails(bankDetailForm);
+     console.log("bankDetailForm submitted successfully");
+ 
+     await acknowledgeDetails(acknowledgeForm);
+     console.log("acknowledgeForm submitted successfully");
+     res
+       .status(201)
+       .json({ statusCode: 200, success: true, message: Msg.formSubmitted });
+   } catch (error) {
     console.error("Error occurred:", error);
     res
-      .status(501)
+      .status(201)
       .json({ statusCode: 500, sucess: false, error: Msg.internalError });
+    
+   }
+  } else {
+   try {
+     await updateAboutYouFormById(aboutYouObj, userId);
+     console.log("about form updated successfully");
+     // console.log(aboutYouForms)
+ 
+     await updateBackgroundInformationbyId(backgroundInfo, userId);
+     console.log("backgroundInfo updated successfully");
+ 
+     await updateVehicleExperienceById(vehicleExperienceForm, userId);
+ 
+     console.log("vehicleExperienceForm updated successfully");
+ 
+     await updatePersonalDetailsById(personalDetailForm, userId);
+     console.log("personalDetailForm updated successfully");
+ 
+     await updateBankDetailsById(bankDetailForm, userId);
+     console.log("bankDetailForm updated successfully");
+ 
+     await updateAcknowledgeDetailsById(acknowledgeForm, userId);
+     console.log("acknowledgeForm updated successfully");
+     res
+       .status(201)
+       .json({ statusCode: 200, success: true, message: Msg.formUpdated });
+   } catch (error) {
+    console.error("Error occurred:", error);
+    res
+      .status(201)
+      .json({ statusCode: 500, sucess: false, error: Msg.internalError });
+    
+   }
   }
-
-  // // const savedBackgroundInfo = await BackgroundInfoModel.create(backgroundInfoData, { transaction });
-  // // const savedVehicleExperience = await VehicleExperienceModel.create(vehicleExperienceData, { transaction });
-  // let datas = [aboutYouForms, backgroundInformations, vehicleExperienceForms]
-  // Promise.all(datas)
-  //     .then((datas) => {
-  //         // Check if both promises were successful
-  //         if (datas) {
-  //             // Both promises were successful
-  //             console.log('All data has been saved successfully');
-  //             return res.json({
-  //                 message: 'data save succesfully',
-  //                 success: true,
-  //                 status: 200,
-  //             });
-  //             // You can use switch here if needed
-  //         } else {
-  //             // Handle if any promise failed
-  //             console.log('Some data failed to save');
-  //             return res.json({
-  //                 message: 'data not save succesfully',
-  //                 success: false,
-  //                 status: 400,
-  //             });
-  //             // You can use switch here if needed
-  //         }
-  //     })
-  //     .catch(error => {
-  //         // Handle any errors that occur during promise resolution
-  //         console.error('Error:', error);
-  //     });
 };
 
 let recordNo = 255201;
@@ -605,12 +1115,12 @@ exports.driverIncidentReportHandle = async (req, res) => {
 
     recordNo++;
     res
-      .status(201)
+      .status(200)
       .json({ statusCode: 200, success: true, message: Msg.formSubmitted });
-  } catch (error) {   
+  } catch (error) {
     console.error("Error occurred:", error);
     res
-      .status(501)
+      .status(201)
       .json({ statusCode: 500, sucess: false, error: Msg.internalError });
   }
 };
@@ -643,7 +1153,6 @@ exports.ppeRecordHandle = async (req, res) => {
   }
 };
 
-
 exports.getDriverIncidentReportHandle = async (req, res) => {
   try {
     let { userId } = req.decoded;
@@ -654,14 +1163,13 @@ exports.getDriverIncidentReportHandle = async (req, res) => {
     const condtionResp = await getConditionInformation(userId);
     const driverResp = await getDriverStatement(userId);
 
-    const bankRecord = bankResp.find(item => item.id === parseInt(id));
-    const policeRecord = policeResp.find(item => item.id === parseInt(id));
-    const damageRecord = damageResp.find(item => item.id === parseInt(id));
-    const conditionRecord = condtionResp.find(item => item.id === parseInt(id));
-    const driverRecord = driverResp.find(item => item.id === parseInt(id));
-
-
-
+    const bankRecord = bankResp.find((item) => item.id === parseInt(id));
+    const policeRecord = policeResp.find((item) => item.id === parseInt(id));
+    const damageRecord = damageResp.find((item) => item.id === parseInt(id));
+    const conditionRecord = condtionResp.find(
+      (item) => item.id === parseInt(id)
+    );
+    const driverRecord = driverResp.find((item) => item.id === parseInt(id));
 
     // console.log("police resp",policeResp)
     // console.log("damageResp",damageResp)
@@ -674,25 +1182,29 @@ exports.getDriverIncidentReportHandle = async (req, res) => {
       clientName: bankRecord.clientName,
       vehicleRegistrationNumber: bankRecord.vehicleRegistrationNumber,
       incidentReportedTo: bankRecord.incidentReportedTo.join(", "),
-      dateTimeOfIncident: new Date(conditionRecord.dateTimeOfIncident).toDateString(),
+      dateTimeOfIncident: new Date(
+        conditionRecord.dateTimeOfIncident
+      ).toDateString(),
       roadNumber: conditionRecord.roadNumber,
       location: conditionRecord.location,
       speedInMPH: conditionRecord.speedInMPH,
       lightLevel: conditionRecord.lightLevel,
       weather: conditionRecord.weather.join(", "),
       roadCondition: conditionRecord.roadCondition,
-      PoliceInvolved: policeRecord.PoliceInvolved === '1' ? "Yes" : "No",
-      statementGiven: policeRecord.statementGiven === '1' ? "Yes" : "No",
-      isVehicleDriveable: damageRecord.isVehicleDriveable === '1' ? "Yes" : "No",
+      PoliceInvolved: policeRecord.PoliceInvolved === "1" ? "Yes" : "No",
+      statementGiven: policeRecord.statementGiven === "1" ? "Yes" : "No",
+      isVehicleDriveable:
+        damageRecord.isVehicleDriveable === "1" ? "Yes" : "No",
       didTakePhotos: damageRecord.didTakePhotos,
       wereYouInjured: damageRecord.wereYouInjured,
-      wereThereWitnesses: damageRecord.wereThereWitnesses === '1' ? "Yes" : "No",
+      wereThereWitnesses:
+        damageRecord.wereThereWitnesses === "1" ? "Yes" : "No",
       witnesses: damageRecord.witnesses || "",
       liability: damageRecord.liability || "",
-      vehiclesInvolved: damageRecord.vehiclesInvolved === '1' ? "Yes" : "No",
-      wereYouOnMobile: damageRecord.wereYouOnMobile === 'Yes' ? "Yes" : "No", 
+      vehiclesInvolved: damageRecord.vehiclesInvolved === "1" ? "Yes" : "No",
+      wereYouOnMobile: damageRecord.wereYouOnMobile === "Yes" ? "Yes" : "No",
       driverStatement: driverRecord.driverStatement,
-      signatureUrl: driverRecord.signatureUrl
+      signatureUrl: driverRecord.signatureUrl,
     };
 
     res.status(200).json({
@@ -701,14 +1213,6 @@ exports.getDriverIncidentReportHandle = async (req, res) => {
       message: "Driver incident report retrieved successfully",
       data: formattedData,
     });
-
-
-
-
-
-
-
-
   } catch (error) {
     console.error("Error occurred:", error);
     res
@@ -789,9 +1293,7 @@ exports.getPpeRecordsHandle = async (req, res) => {
     let { userId } = req.decoded;
     const resp = await getPpeRecord(userId);
     const nameResp = await getAboutYouForm(userId);
-    console.log("name response", nameResp)
-
-
+    console.log("name response", nameResp);
 
     const tableData = resp.map((record) => {
       return {
@@ -801,7 +1303,7 @@ exports.getPpeRecordsHandle = async (req, res) => {
         driverName: nameResp[0]?.firstName || "",
         submissionDate: record.submissionDate,
         actionDate: "NA",
-        status: record.status
+        status: record.status,
       };
     });
 
@@ -823,11 +1325,11 @@ exports.getPpeRecordHandle = async (req, res) => {
   try {
     const { id } = req.query;
     let { userId } = req.decoded;
-  
+
     const resp = await getPpeRecord(userId);
     const record = resp.find((item) => item?.id === parseInt(id));
 
-    console.log(userId)
+    console.log(userId);
 
     if (record) {
       // Initialize an array to store the formatted PPE details
@@ -843,7 +1345,11 @@ exports.getPpeRecordHandle = async (req, res) => {
           key.toLowerCase() !== "status"
         ) {
           // Check if the value exists and is not undefined, null, or an empty string
-          if (record[key] !== undefined && record[key] !== null && record[key] !== "") {
+          if (
+            record[key] !== undefined &&
+            record[key] !== null &&
+            record[key] !== ""
+          ) {
             // Format the property name
             const formattedName = key.replace(/([A-Z])/g, " $1").trim();
             const capitalizedFormattedName =
