@@ -17,6 +17,8 @@ app.get("/searchAdmin", authenticateToken, controller.superAdminController.searc
 app.get("/searchUser", authenticateToken, controller.superAdminController.searchUserByData)
 //app.get("/sortUsers", authenticateToken, controller.superAdminController.sortUserByDate)
 
+app.get("/allLogs", authenticateToken, controller.superAdminController.allLogs)
+
 
 
 

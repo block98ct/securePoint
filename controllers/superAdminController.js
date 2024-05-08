@@ -1,14 +1,17 @@
-const { hashPassword, generateRandomString } = require("../helpers/middleware");
+const { hashPassword, generateRandomString, generateRandomPassword } = require("../helpers/middleware");
 
 const {
   fetchAdminById,
   adminRegister,
   fetchAdminByEmail,
   setAdminStatus,
-  getAdminData
+  getAdminData,
+  getLogsData,
+  addLogs
 } = require("../models/admin.modal");
 const { fetchUserByEmail, setUSerStatus,getUserData, userRegister } = require("../models/user.model");
 const Msg = require("../helpers/message");
+const { mail} = require("../helpers/emailPassword")
 
 const checkSuperAdmin = async(req)=>{
   const { adminId } = req.decoded;
@@ -20,14 +23,19 @@ const checkSuperAdmin = async(req)=>{
     .json({ success: false, message: "you are not authorized" });
   }
 
-}
+} 
 exports.resgisterAdmins = async (req, res) => {
   try {
+    
     await checkSuperAdmin(req)
     const { name, email, password, confirmPassword, contactNo } = req.body;
-    
+    const { adminId } = req.decoded;
+    const adminResp = await fetchAdminById(adminId);
+
 
     const checkEmail = await fetchAdminByEmail(email);
+
+
 
     if ((!name || !email || !password || !confirmPassword, !contactNo)) {
       return res
@@ -37,7 +45,7 @@ exports.resgisterAdmins = async (req, res) => {
 
     if (checkEmail.length > 0) {
       return res.status(201).send({
-        status: false,
+        success: false,
         msg: Msg.emailExists
       });
     }
@@ -54,14 +62,25 @@ exports.resgisterAdmins = async (req, res) => {
       password: Password,
       contactNo
     };
-
     await adminRegister(adminObj);
+    
+    let logObj={
+      name: adminResp[0].name,
+      authority: adminResp[0].roll,
+      effectedData: "resgister new admin",
+      timestamp: new Date(),
+      action: "created"
+
+    }
+    // adding logs
+    await addLogs(logObj)
+ 
 
     return res.status(200).json({ success: true, message: Msg.adminRegister });
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: error
     });
   }
@@ -70,14 +89,17 @@ exports.resgisterAdmins = async (req, res) => {
 
 exports.regitserUsers= async(req, res)=>{
   try {
+    const { adminId } = req.decoded;
+    const adminResp = await fetchAdminById(adminId);
     await checkSuperAdmin(req)
-    const { name, email, password, confirmPassword, contactNo } = req.body;
+    const { name, email,  contactNo } = req.body;
     
 
     const checkEmail = await fetchUserByEmail(email);
+    const password = await generateRandomPassword(8)
     const actToken = await generateRandomString(8)
 
-    if ((!name || !email || !password || !confirmPassword, !contactNo)) {
+    if ((!name || !email || !contactNo)) {
       return res
         .status(201)
         .json({ success: false, message: Msg.invalidCread });
@@ -85,14 +107,11 @@ exports.regitserUsers= async(req, res)=>{
     
     if (checkEmail.length > 0) {
       return res.status(201).send({
-        status: false,
+        success: false,
         msg: Msg.emailExists
       });
     }
 
-    if (password !== confirmPassword) {
-      return res.status(201).json({ success: false, message: Msg.pwdNotMatch });
-    }
 
     const Password = await hashPassword(password);
 
@@ -100,18 +119,32 @@ exports.regitserUsers= async(req, res)=>{
       name,
       email,
       password: Password,
+      isVerified: 1,
       contactNumber: contactNo,
       actToken
     };
-   
+
+    await mail(email, password)
     await userRegister(adminObj);
+
+    let logObj={
+      name: adminResp[0].name,
+      authority: adminResp[0].roll,
+      effectedData: "resgister new users",
+      timestamp: new Date(),
+      action: "created"
+
+    }
+    // adding logs
+    await addLogs(logObj)
+    
     return res.status(200).json({ success: true, message: Msg.adminRegister });
 
     
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: error
     });
     
@@ -156,7 +189,7 @@ exports.setStatusOfAdmins = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: error
     });
   }
@@ -185,7 +218,7 @@ exports.allAdminsData = async(req, res)=>{
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: error
     });
     
@@ -213,7 +246,7 @@ exports.allUserData =async(req, res)=>{
     } catch (error) {
         console.log(error);
         return res.status(201).send({
-          status: false,
+          success: false,
           msg: error
         });
         
@@ -261,7 +294,7 @@ exports.searchUserByData = async(req, res)=>{
   } catch (error) {
     console.log(error)
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: error
     });
   }
@@ -353,6 +386,44 @@ exports.searchAdminByData = async(req, res)=>{
 //   }
 // }
 
+
+
+let logId = 1300;
+exports.allLogs= async(req,res)=>{
+  try {
+    await checkSuperAdmin(req)
+    const logsResponse = await getLogsData()
+    const formattedData = await logsResponse.map((item, index)=>{
+      return {
+        id:item.id,
+        logiId:logId+index,
+        name: item.name,
+        authority: item.authority,
+        effectedData: item.effectedData,
+        timestamp: (item.timestamp).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        }),
+        action: item.action
+      }
+    })
+
+    
+    return res.status(200).json({ success: true, data: formattedData });
+
+  } catch (error) {
+    console.log(error)
+      return res.status(201).send({
+      status: false,
+      msg: error
+    });
+  }
+
+}
 
 
 

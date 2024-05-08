@@ -120,15 +120,18 @@ module.exports = {
   updateAdminPasswordByEmail: async (obj) => {
     return db.query(`UPDATE admins SET password = ? WHERE email = ?`, [
       obj.email,
-      obj.password
+      obj.password,
     ]);
   },
 
   updateAdminOtpToNullByEmail: async (email) => {
-    return db.query(`UPDATE admins SET otp = NULL WHERE email = ?`, [ email]);
+    return db.query(`UPDATE admins SET otp = NULL WHERE email = ?`, [email]);
   },
 
-
-
-
+  getLogsData: async () => {
+    return db.query(`select * from logs`);
+  },
+  addLogs: async (logsData) => {
+    return db.query("insert into logs set ?", [logsData]);
+  },
 };

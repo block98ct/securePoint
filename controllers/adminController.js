@@ -99,6 +99,7 @@ exports.adminLogin = async (req, res) => {
       status: true,
       msg: Msg.loginSuccesfully,
       token: token,
+      roll: checkEmail[0].roll
     });
   } catch (error) {
     console.log(error);
@@ -122,21 +123,27 @@ exports.allPpeRequests = async (req, res) => {
         (request) => request.userId === application.userId
       );
       return {
-        id: ppeRequest.id,
+        id: ppeRequest ? ppeRequest.id : null,
         requestNo: ppeRequest ? ppeRequest.requestNo : null,
         totalItems: ppeRequest
           ? Object.values(ppeRequest)
-              .filter((item) => typeof item === "object")
-              .reduce((acc, curr) => acc + parseInt(curr.numberRequired), 0)
+              .filter((item) => typeof item === "object" && item !== null)
+              .reduce(
+                (acc, curr) =>
+                  acc + (curr.numberRequired ? parseInt(curr.numberRequired) : 0),
+                0
+              ) // Use 0 if numberRequired is null or undefined
           : null,
         driverName: `${application.firstName} ${application.lastName}`,
         submissionDate: ppeRequest
           ? ppeRequest.submissionDate.toISOString().split("T")[0]
           : null,
-        action: "", // Add action data here
+        actionDate: "N/A",
         status: ppeRequest ? ppeRequest.status : null,
+
       };
     });
+    
 
     return res.status(200).json({
       success: true,
@@ -145,7 +152,7 @@ exports.allPpeRequests = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: Msg.err,
     });
   }
@@ -218,7 +225,7 @@ exports.ppeRequestOnlyOne = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: Msg.err,
     });
   }
@@ -266,7 +273,7 @@ exports.ppeReportSortByDate = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: Msg.err,
     });
   }
@@ -288,14 +295,16 @@ exports.allIncidentReports = async (req, res) => {
       const conditionRecord = conditionDetails.find(
         (record) => record.userId === application.userId
       );
+      const recordNo = bankRecord ? bankRecord.recordNo : null;
+      // const location = conditionRecord? conditionRecord.location: ""
 
       return {
-        id: applications.id,
-        recordNo: bankRecord.recordNo,
-        location: conditionRecord.location,
+        id: applications ? application.id : "",
+        recordNo: recordNo,
+        location: conditionRecord ? conditionRecord.location : "",
         driverName: `${application.firstName} ${application.lastName}`,
-        clientName: bankRecord.clientName,
-        vehicleNumber: bankRecord.vehicleRegistrationNumber,
+        clientName: bankRecord ? bankRecord.clientName : "",
+        vehicleNumber: bankRecord ? bankRecord.vehicleRegistrationNumber : "",
       };
     });
 
@@ -305,7 +314,7 @@ exports.allIncidentReports = async (req, res) => {
       data: formattedData,
     });
   } catch (error) {
-    console.error("Error setting PPE request status:", error);
+    console.error(error);
     return res.status(201).json({ success: false, message: Msg.err });
   }
 };
@@ -330,6 +339,7 @@ exports.incidentReportOnlyOne = async (req, res) => {
     const driverRecord = driverResp.find((item) => item.id === parseInt(id));
 
     const formattedData = {
+      id: bankRecord.id,
       recordNo: bankRecord.recordNo,
       clientName: bankRecord.clientName,
       vehicleRegistrationNumber: bankRecord.vehicleRegistrationNumber,
@@ -368,7 +378,7 @@ exports.incidentReportOnlyOne = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: Msg.err,
     });
   }
@@ -414,7 +424,7 @@ exports.incidentReportsSortbyDate = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: Msg.err,
     });
   }
@@ -448,7 +458,7 @@ exports.allRequests = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(201).send({
-      status: false,
+      success: false,
       msg: Msg.err,
     });
   }
@@ -748,7 +758,7 @@ exports.setDrivingApplicationStatus = async (req, res) => {
       .status(200)
       .json({ success: true, message: Msg.ppeRequestUpdated });
   } catch (error) {
-    console.error("Error setting PPE request status:", error);
+    console.error( error);
     return res.status(201).json({ success: false, message: Msg.err });
   }
 };
@@ -901,6 +911,7 @@ exports.licenseStatus = async (req, res) => {
     await checkIsAdmin(req);
     const resp = await getAllDriverApplication();
     const resp1 = await getVehicleExperienceDetail();
+    console.log("resp----->", resp);
 
     const mergedData = resp.map((application) => {
       const licenseInfo = resp1.find(
@@ -915,7 +926,9 @@ exports.licenseStatus = async (req, res) => {
         driverName: `${application.firstName} ${application.lastName}`,
         country: application.country,
         licenseNumber: licenseInfo ? licenseInfo.licenseNumber : null,
+        contactNumber: application.mobileNumber,
         expDate: expDate,
+
         status: status,
       };
     });

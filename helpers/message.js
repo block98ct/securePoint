@@ -36,7 +36,8 @@ const messages = {
     otpMatched: "Otp matched sucessfully",
     failedToResest:'Failed to reset password',
     otpSent: 'OTP sent successfully',
-    passwordUpdated: 'password update successfully'
+    passwordUpdated: 'password update successfully',
+    formUpdated: "form updated successfully"
 
 
     // Add more messages as needed
