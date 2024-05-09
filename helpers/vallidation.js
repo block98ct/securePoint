@@ -5,13 +5,7 @@ const userSighUp = [
     body('email')
         .isEmail().normalizeEmail().withMessage('Email Must Be Required'),
 
-    body('mobileNumber')
-        .notEmpty().withMessage('Mobile Number must be required')
-        .isLength({ min: 10 }).withMessage('Mobile Number Must Be 10 Digits'),
 
-    body('password')
-        .notEmpty().withMessage('Password must be required')
-        .isLength({ min: 8 }).withMessage('Password should be at least 8 characters long')
 ];
 // Validation rules for user login
 const userLogin = [

@@ -19,8 +19,8 @@ module.exports.mail = async function (email, otp) {
     let mailOptions = {
         from: "mkdteamcti@gmail.com", // Sender's email address
         to: email, // Recipient's email address
-        subject: "OTP for Password Reset", // Email subject
-        html: `<p>Your OTP for password reset is: <strong>${otp}</strong></p>`, // Email content with OTP
+        subject: "OTP for verifying user", // Email subject
+        html: `<p> Your OTP for verifying user: <strong>${otp}</strong></p>`, // Email content with OTP
     };
 
     // Send email using transporter
