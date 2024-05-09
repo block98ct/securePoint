@@ -41,16 +41,6 @@ exports.authenticateToken = async (req, res, next) => {
     }
 }
 
-//**-----------generate random number---------- */
-exports.generateRandomString = async (length) => {
-    const characters =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-}
 
 
 
@@ -63,4 +53,9 @@ exports.generateRandomPassword = async (length) => {
     }
     return result;
 }
+
+
+ exports.generateOTP = async()=> {
+    return Math.floor(100000 + Math.random() * 900000); 
+  }
 

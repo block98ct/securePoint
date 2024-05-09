@@ -16,7 +16,7 @@ app.use(express.static("public"))
 app.use('/api', route);
 
 /**--------server start-------- */
-let port = process.env.PORT || 4000;
+let port = process.env.PORT || 5005;
 // "192.168.29.216"
 app.listen(port, () => {
     console.log(`Server started at http://localhost:${port}`); // Log server start message with port number
