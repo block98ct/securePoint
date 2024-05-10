@@ -40,6 +40,13 @@ module.exports = {
   setLoginStatusByNumber: async(obj)=>{
     return db.query('UPDATE users SET lastlogin = ? WHERE contactNumber = ?', [obj.lastlogin, obj.contactNumber]);
 
+  },
+
+
+
+  addDataInAssets: async(obj)=>{
+    return db.query("insert into assets set ?", [obj]);
+
   }
   
   

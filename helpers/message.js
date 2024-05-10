@@ -12,7 +12,7 @@ const messages = {
     inValidPassword: "Invalid password.",
     inValidEmail: "Email address not found. Please enter a valid email",
     inValidNumber: "number not found. Please enter a valid number",
-
+    imgePath: "images path is not available",
     pwdResetLink: "Password reset link sent successfully. Please check your email ",
     invalidLink: "invalid link",
     passMatch: 'Password did not match',

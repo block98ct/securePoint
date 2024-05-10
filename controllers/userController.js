@@ -16,7 +16,9 @@ const {
   updateUserOtpToVerifiedByNumber,
   setLoginStatus,
   updatePasswordByNumber,
-  setLoginStatusByNumber
+  setLoginStatusByNumber,
+  addDataInAssets
+
 } = require("../models/user.model");
 const { emit } = require("../routes/userRouter");
 
@@ -204,7 +206,7 @@ exports.userLogin = async (req, res) => {
   try {
     if (email) {
       if (!email || !password) {
-        return res.status(400).send({
+        return res.status(201).send({
           status: false,
           msg: Msg.allFieldsRequired,
         });
@@ -317,4 +319,85 @@ exports.userLogin = async (req, res) => {
   }
 };
 
+
+
+exports.addAssets = async(req, res)=>{
+  try {
+    const {
+      AssetName,
+      AssetDetails,
+      AssetIdentifier,
+      category,
+      lockAndUnlock,
+      subCategory,
+      images,
+      status,
+      promote,
+      coordinates,
+      
+  } = req.body;
+
+  
+
+  if (
+    [  AssetName,
+      AssetDetails,
+      AssetIdentifier,
+      category,
+      lockAndUnlock,
+      subCategory,
+      images,
+      status,
+      promote,
+      coordinates,
+      ].some((field) => field?.trim() === "")
+  ) {
+    return res.status(201).send({
+      status: false,
+      msg: Msg.allFieldsRequired,
+    });
+  }
+  
+    const {userId}= req.decoded
+
+    console.log(req.decoded)
+    const imgPath = req.files[0].path
+    if (!imgPath) {
+      return res.status(201).send({
+        status: false,
+        msg: Msg.imgePath,
+      });
+    }
+
+    let obj = {
+      AssetName,
+      AssetDetails,
+      AssetIdentifier,
+      category,
+      lockAndUnlock,
+      subCategory,
+      images: imgPath,
+      status,
+      promote,
+      coordinates,
+      userId
+    }
+
+
+  
+    // await addDataInAssets(obj)
+    
+    return res
+      .status(200)
+      .json({ success: true });
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(201).send({
+      status: false,
+      msg: Msg.err,
+    });
+    
+  }
+}
 
