@@ -1,9 +1,9 @@
 // Import nodemailer module
-const nodemailer = require('nodemailer');
-const baseurl = require('../config').base_url;
+import  nodemailer from 'nodemailer'
+// const baseurl = require('../config').base_url;
 
 // Define a function named 'mail' to send an email with OTP
-module.exports.mail = async function (email, otp) {
+export const mail = async function (email, otp) {
     // Create a transporter object
     let transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",

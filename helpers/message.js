@@ -9,6 +9,8 @@ const messages = {
     signUpSuccess: "Sign up successful! Welcome to our application.",
     signUpError: 'SignUp not register',
     loginSuccesfully: "You are now logged in.",
+    imgePath: "images path is not available",
+    assetAdded: "assets added successfully",
     inValidPassword: "Invalid password.",
     inValidEmail: "Email address not found. Please enter a valid email",
     inValidNumber: "number not found. Please enter a valid number",
@@ -41,12 +43,18 @@ const messages = {
     failedToResest:'Failed to reset password',
     otpSent: 'OTP sent successfully',
     passwordUpdated: 'password update successfully',
-    formUpdated: "form updated successfully"
+    formUpdated: "form updated successfully",
+    errorUpdatingName: 'profile name does not updated',
+    errorUpdatingDp: 'profile picture does not updated',
+    imgIsNotAvailable: "please provide a image",
+    profileUpdated: "Profile updated successfully",
+    profileDeleted: "Profile deleted successfully",
+    errorInDeletingProfile: 'error while deleting user profile'
 
 
     // Add more messages as needed
 };
 
 // Export the messages
-module.exports = messages;
+export default messages;
 

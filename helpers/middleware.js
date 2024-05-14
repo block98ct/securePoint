@@ -1,10 +1,10 @@
 // Importing the bcryptjs library for password hashing
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import bcrypt from'bcryptjs'
+import  jwt from'jsonwebtoken'
 
 
 // Function to hash the given password using bcrypt
-exports.hashPassword = async (password, saltRounds = 10) => {
+export const hashPassword = async (password, saltRounds = 10) => {
     try {
         const salt = await bcrypt.genSalt(saltRounds);
         return await bcrypt.hash(password, salt);
@@ -15,7 +15,7 @@ exports.hashPassword = async (password, saltRounds = 10) => {
 }
 
 // Function to compare the given password with a hash using bcrypt
-exports.comparePassword = async (pass, hash) => {
+export const comparePassword = async (pass, hash) => {
     try {
         const match = await bcrypt.compare(pass.toString(), hash);
         if (match) {
@@ -28,7 +28,7 @@ exports.comparePassword = async (pass, hash) => {
 }
 
 // Middleware function to authenticate a token
-exports.authenticateToken = async (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
     const authToken = req.header('Authorization');
     if (!authToken) return res.status(401).send('Please provide a token');
     let token = authToken.split(' ').slice(-1)[0];
@@ -44,7 +44,7 @@ exports.authenticateToken = async (req, res, next) => {
 
 
 
-exports.generateRandomPassword = async (length) => {
+export const generateRandomPassword = async (length) => {
     const characters =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnxyz0123456789";
     let result = "";
@@ -55,7 +55,7 @@ exports.generateRandomPassword = async (length) => {
 }
 
 
- exports.generateOTP = async()=> {
+ export const generateOTP = async()=> {
     return Math.floor(100000 + Math.random() * 900000); 
   }
 

@@ -1,12 +1,12 @@
-const express = require('express');
-var router = express.Router();
+import express from "express"
+const router = express.Router();
+import userRouter from "./userRouter.js"
 
-router.use('/userRouter', require('./userRouter'))
+router.use('/userRouter', userRouter)
 
 // // Mounting the adminRouter under the '/router' path prefix
 // router.use('/adminRouter', require('./adminRouter'))
 // router.use("/superAdminRouter", require('./superAdminRouter'))
 
 
-
-module.exports = router
+export default router

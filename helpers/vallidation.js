@@ -1,14 +1,14 @@
 // Importing necessary functions from the express-validator library
-const { body, validationResult } = require('express-validator');
+import  { body, validationResult } from 'express-validator'
 
-const userSighUp = [
+export const userSighUp = [
     body('email')
         .isEmail().normalizeEmail().withMessage('Email Must Be Required'),
 
 
 ];
 // Validation rules for user login
-const userLogin = [
+export const userLogin = [
     body('email')
         .isEmail().normalizeEmail().withMessage('Email Must Be Required'),
 
@@ -17,7 +17,7 @@ const userLogin = [
         .isLength({ min: 8 }).withMessage('Password should be at least 8 characters long')
 ];
 
-const subAdminCreateValidate = [
+export const subAdminCreateValidate = [
     body('mobileNumber')
         .notEmpty().withMessage('Mobile Number must be required')
         .isLength({ min: 10 }).withMessage('Mobile Number Must Be 10 Digits'),
@@ -27,7 +27,7 @@ const subAdminCreateValidate = [
         .isLength({ min: 8 }).withMessage('Password should be at least 8 characters long')
 ];
 
-const passwordVallidate = [
+export const passwordVallidate = [
     body('password')
         .notEmpty().withMessage('Password must be required')
         .isLength({ min: 8 }).withMessage('Password should be at least 8 characters long'),
@@ -37,7 +37,7 @@ const passwordVallidate = [
 ]
 
 // Middleware function to handle validation errors
-const handleValidationErrors = (req, res, next) => {
+export const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).send({
@@ -47,11 +47,4 @@ const handleValidationErrors = (req, res, next) => {
     next();
 };
 
-// Exporting validation rules and error handling middleware
-module.exports = {
-    userLogin,
-    userSighUp,
-    subAdminCreateValidate,
-    passwordVallidate,
-    handleValidationErrors
-};
+

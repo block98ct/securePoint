@@ -1,12 +1,35 @@
-const userController = require('./userController');
+import {
+  registerUserByEmail,
+  registerUserByNumber,
+  verifyOtp,
+  setPassword,
+  userLogin,
+  addAssets,
+  updateUserAssetDetails,
+  getAssetDetails,
+  getAssetsByCategory,
+  editProfile,
+  deleteProfile,
+  addCategories,
+  getCategoryList,
+  allCategoriesAndCount
+  
+} from "./userController.js";
 
-
-// Create an object to hold references to userController and adminController and subAdminController
-const controller = {
-    userController: userController,
-    // adminController: adminController,
-    // superAdminController: superAdminController
-    // subAdminController:subAdminController
+export const userController = {
+    registerUserByEmail,
+    registerUserByNumber,
+    verifyOtp,
+    setPassword,
+    userLogin,
+    addAssets,
+    updateUserAssetDetails,
+    getAssetDetails,
+    getAssetsByCategory,
+    editProfile,
+    deleteProfile,
+    addCategories,
+    getCategoryList,
+    allCategoriesAndCount
 };
 
-module.exports = controller;  

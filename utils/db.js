@@ -1,5 +1,4 @@
-const mysql = require('mysql2');
-
+import mysql from "mysql2"
 const connection = mysql.createConnection({
     host: 'localhost',
     user: process.env.DB_USERNAME,
@@ -17,7 +16,7 @@ connection.connect((err) => {
     }
 });
 
-const utill = require('util');
+import utill from 'util'
 function makeDb() {
     return {
         query(sql, args) {
@@ -33,4 +32,4 @@ function makeDb() {
     }
 }
 const db = makeDb();
-module.exports = db;
+export default db;
