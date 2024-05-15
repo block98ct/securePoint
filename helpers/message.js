@@ -49,7 +49,10 @@ const messages = {
     imgIsNotAvailable: "please provide a image",
     profileUpdated: "Profile updated successfully",
     profileDeleted: "Profile deleted successfully",
-    errorInDeletingProfile: 'error while deleting user profile'
+    assetDeleted: "asset deleted successfully",
+    assetExists: "assets does not exists",
+    errorInDeletingProfile: 'error while deleting user profile',
+    catgoryExists: "category does not existes"
 
 
     // Add more messages as needed

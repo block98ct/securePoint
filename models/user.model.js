@@ -13,18 +13,30 @@ export const  fetchUserByEmail = async (email) => {
   return db.query(`SELECT * FROM users WHERE email = '${email}'`);
 };
 
+export const  fetchUserByNumber = async (number) => {
+  return db.query(`SELECT * FROM users WHERE contactNumber = '${number}'`);
+};
+
+
+export const  fetchUserById = async (id) => {
+  return db.query(`SELECT * FROM users WHERE id = '${id}'`);
+};
+
+
 
 export const  fetchUserAssetsById = async (userId) => {
   return db.query(`SELECT * FROM assets WHERE userId = '${userId}'`);
 };
 
+export const  fetchAssetsById = async (id) => {
+  return db.query(`SELECT * FROM assets WHERE id = '${id}'`);
+};
+
+
 export const  fetchUserAssetsImagesById = async (id) => {
   return db.query(`SELECT * FROM assetimages  WHERE userId = '${id}'`);
 };
 
-export const  fetchUserByNumber = async (number) => {
-  return db.query(`SELECT * FROM users WHERE contactNumber = '${number}'`);
-};
 
 export const  updateUserOtpToVerifiedByEmail = async (obj) => {
   return db.query(
@@ -100,8 +112,26 @@ export const updateProfileName = async (userId, name) => {
 };
 
 
+export const updateAssetLockedAndUnlocked = async (id, name) => {
+  return db.query(`UPDATE assets SET lockAndUnlock = ? WHERE id = ?`, [id, name]);
+};
+
+export const updateHidStatusOfAsset = async (id, status) => {
+  return db.query(`UPDATE assets SET hideStatus = ? WHERE id = ?`, [status, id]);
+};
+
 export const updateProfileDp= async (obj) => {
   return db.query(`UPDATE users SET dp = ? WHERE id = ?`, [obj.dp, obj.userId])
+};
+
+export const updateProfileNotes = async (userId, notes) => {
+  return db.query(`UPDATE users SET notes = ? WHERE id = ?`, [notes, userId]);
+};
+
+
+export const updateProfileNameStatus = async (userId, status) => {
+
+  return db.query(`UPDATE users SET nameStatus = ? WHERE id = ?`, [status, userId]);
 };
 
 
@@ -124,6 +154,19 @@ export const deleteAssetsImagesByUserId = async(userId)=>{
 
 
 
+export const deleteAssetsById = async(userId)=>{
+  return db.query(`DELETE FROM assets  WHERE id = ?`, [userId])
+ 
+}
+
+
+export const deleteAssetsImagesById = async(assetId)=>{
+  return db.query(`DELETE FROM assetimages  WHERE assetId = ?`, [assetId])
+ 
+}
+
+
+
 export const insertCategories= async(obj)=>{
   return db.query(`insert into categories set ?`, [obj]);
 
@@ -136,6 +179,12 @@ export const getCategoriesList= async()=>{
 
 }
 
+export const getCategoriesById= async(id)=>{
+  return db.query(`SELECT * FROM categories WHERE id = '${id}'`);
+
+}
+
+
 
 
 export const getAssetsCountByCategory = async (categoryId) => {
@@ -143,6 +192,22 @@ export const getAssetsCountByCategory = async (categoryId) => {
     return count[0].count || 0;
  
 };
+
+
+export const getSubCategories = async(categoryId)=>{
+  return db.query(`SELECT * FROM subCategories WHERE categoryId = '${categoryId}'`);
+
+
+}
+
+
+
+export const getSubCategoriesById = async(id)=>{
+  return db.query(`SELECT * FROM subCategories WHERE id = '${id}'`);
+
+
+}
+
 
 
 

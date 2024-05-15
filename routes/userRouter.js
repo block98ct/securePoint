@@ -16,14 +16,26 @@ app.post('/addAssets', authenticateToken,  handleValidationErrors, upload.array(
 app.post('/updateAssets', authenticateToken,  handleValidationErrors, upload.array('images', 4), userController.updateUserAssetDetails)
 app.get('/getAssetsOfUser', authenticateToken,  handleValidationErrors,  userController.getAssetDetails)
 app.get('/getAssetsByCategory', authenticateToken,  handleValidationErrors,  userController.getAssetsByCategory)
+app.post('/setLockAndUnlocked', authenticateToken,  handleValidationErrors,  userController.setLockedAndUnlockedStatus)
+app.post('/setHideStatus', authenticateToken,  handleValidationErrors,  userController.setAssetHideStatus)
+
+
+
+
 
 app.post('/editProfile', authenticateToken,  handleValidationErrors, upload.single('dp'), userController.editProfile)
 app.delete('/deleteProfile', authenticateToken,  handleValidationErrors, userController.deleteProfile)
+
+app.delete('/deleteUserAsset', authenticateToken,  handleValidationErrors, userController.deleteUserAsset)
+
 
 
 
 app.post('/addCategories',  handleValidationErrors, upload.single('categoryImage'), userController.addCategories)
 app.get('/categoriesList', authenticateToken,  handleValidationErrors,  userController.getCategoryList)
+app.get('/subCategoriesList', authenticateToken,  handleValidationErrors,  userController.getSubCategoriesListById)
+
+
 
 app.get('/allCategoriesCount', authenticateToken,  handleValidationErrors,  userController.allCategoriesAndCount)
 

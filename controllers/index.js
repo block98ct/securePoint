@@ -12,9 +12,15 @@ import {
   deleteProfile,
   addCategories,
   getCategoryList,
-  allCategoriesAndCount
+  allCategoriesAndCount,
+  setLockedAndUnlockedStatus,
+  deleteUserAsset,
+  setAssetHideStatus,
+  getSubCategoriesListById
   
 } from "./userController.js";
+
+//import {} from "./userController.js"
 
 export const userController = {
     registerUserByEmail,
@@ -30,6 +36,16 @@ export const userController = {
     deleteProfile,
     addCategories,
     getCategoryList,
-    allCategoriesAndCount
+    allCategoriesAndCount,
+    setLockedAndUnlockedStatus,
+    deleteUserAsset,
+    setAssetHideStatus,
+    getSubCategoriesListById
 };
+
+
+
+// export const adminController={
+
+// }
 

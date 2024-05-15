@@ -11,6 +11,7 @@ import { hashPassword, generateOTP } from "../helpers/middleware.js";
 import {
   fetchUserByEmail,
   fetchUserByNumber,
+  fetchAssetsById,
   userRegister,
   updateUserOtpToVerifiedByEmail,
   updatePasswordByEmail,
@@ -22,17 +23,29 @@ import {
   updateAssetDetails,
   fetchUserAssetsById,
   fetchUserAssetsImagesById,
+  fetchUserById,
   addAssetImges,
   fetchAssetsByCategory,
   assetImages,
   updateProfileName,
   updateProfileDp,
+  updateProfileNotes,
+  updateProfileNameStatus,
+  updateHidStatusOfAsset,
+  updateAssetLockedAndUnlocked,
   deleteAssetsByUserId,
   deleteAssetsImagesByUserId,
+  deleteAssetsById,
+  deleteAssetsImagesById,
   deleteUserById,
   insertCategories,
   getCategoriesList,
-  getAssetsCountByCategory
+  getAssetsCountByCategory,
+  getSubCategories,
+  getCategoriesById,
+  getSubCategoriesById
+
+
 } from "../models/user.model.js";
 
 export const registerUserByEmail = async (req, res) => {
@@ -370,8 +383,6 @@ export const addAssets = async (req, res) => {
     const { userId } = req.decoded;
     console.log(req.decoded);
 
-
-
     const imgPaths = req.files.map((file) => file.filename);
     console.log(imgPaths);
     if (!imgPaths) {
@@ -397,7 +408,7 @@ export const addAssets = async (req, res) => {
     addDataInAssets(obj);
 
     const assetResp = await fetchUserAssetsById(userId);
-    const assetId = assetResp[0].id;
+    const assetId = assetResp[assetResp.length - 1].id;
     console.log(assetResp);
     const formattedData = imgPaths.map((imgPath) => {
       let obj = {
@@ -483,7 +494,8 @@ export const getAssetDetails = async (req, res) => {
     const resp = await fetchUserAssetsById(userId);
     const assetResp = await fetchUserAssetsImagesById(userId);
 
-    const mergedAssets = resp.map((asset) => {
+    const mergedAssets = [];
+    for (const asset of resp) {
       const images = assetResp
         .filter((img) => img.assetId === asset.id)
         .map((img) => ({
@@ -492,11 +504,24 @@ export const getAssetDetails = async (req, res) => {
           userId: img.userId,
           assetId: img.assetId,
         }));
-      return {
+      
+      const createdAt = new Date(asset.createdAt);
+      const monthYear = `${createdAt.toLocaleString('default', { month: 'short' })} ${createdAt.getFullYear()}`;
+      
+      // Fetch category name based on category ID
+      const category = await getCategoriesById(asset.category);
+      const subCategory = await getSubCategoriesById(asset.subCategory)
+      
+
+      
+      mergedAssets.push({
         ...asset,
+        createdAt: monthYear,
+        category: category[0].categoryName,
+        subCategory: subCategory[0].subCategory,
         images,
-      };
-    });
+      });
+    }
 
     return res.status(200).json({ success: true, data: mergedAssets });
   } catch (error) {
@@ -507,25 +532,41 @@ export const getAssetDetails = async (req, res) => {
   }
 };
 
+
 export const getAssetsByCategory = async (req, res) => {
   try {
     const { category } = req.query;
     const assets = await fetchAssetsByCategory(category);
+    if (assets.length <= 0) {
+      return res.status(201).json({
+        success: false,
+        msg: Msg.catgoryExists
+      });
+    }
+    
     const assetImagesResp = await assetImages();
-    console.log(assetImagesResp)
-    // console.log(assetImgResp);
-
+    // Fetch category name based on category ID
+    const categoryDetails = await getCategoriesById(category);
+    const subCategoryDetails = await getSubCategoriesById(assets[0].subCategory)
+    
     const assetsWithImages = assets.map((asset) => {
       const images = assetImagesResp
-            .filter((img) => img.assetId === asset.id)
-            .map((img) => ({
-              id: img.id,
-              images: `${base_url}/temp/${img.images}`, 
-              userId: img.userId,
-              assetId: img.assetId,
-            }));
+        .filter((img) => img.assetId === asset.id)
+        .map((img) => ({
+          id: img.id,
+          images: `${base_url}/temp/${img.images}`,
+          userId: img.userId,
+          assetId: img.assetId,
+        }));
+      
+      const createdAt = new Date(asset.createdAt);
+      const monthYear = `${createdAt.toLocaleString('default', { month: 'short' })} ${createdAt.getFullYear()}`;
+      
       return {
         ...asset,
+        createdAt: monthYear,
+        category: categoryDetails[0].categoryName, 
+        subCategory: subCategoryDetails[0].subCategory,
         images,
       };
     });
@@ -542,9 +583,14 @@ export const getAssetsByCategory = async (req, res) => {
 export const editProfile = async (req, res) => {
   try {
     const { userId } = req.decoded;
-    const { name, dp } = req.body;
+    const { name, dp, notes, nameStatus } = req.body;
 
-    const imagPath = req.file.filename;
+    let imagPath;
+    if (req.file) {
+      imagPath = req.file.filename;
+    }
+
+    // console.log(imagPath)
 
     if (name) {
       try {
@@ -573,11 +619,22 @@ export const editProfile = async (req, res) => {
           msg: Msg.errorUpdatingDp,
         });
       }
-    } else {
-      return res.status(201).json({
-        success: false,
-        msg: Msg.imgIsNotAvailable,
-      });
+    }
+
+    if (notes) {
+      try {
+        await updateProfileNotes(userId, notes);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    if (nameStatus) {
+      try {
+        await updateProfileNameStatus(userId, nameStatus);
+      } catch (error) {
+        console.log(error);
+      }
     }
 
     return res.status(200).json({
@@ -585,6 +642,61 @@ export const editProfile = async (req, res) => {
       msg: Msg.profileUpdated,
     });
   } catch (error) {
+    console.log(error);
+    return res.status(201).send({
+      success: false,
+      msg: Msg.err,
+    });
+  }
+};
+
+export const setLockedAndUnlockedStatus = async (req, res) => {
+  try {
+    const { status, id } = req.body;
+
+    const asset = await fetchAssetsById(id);
+    if (asset.length <= 0) {
+      return res.status(201).send({
+        success: false,
+        msg: Msg.assetExists,
+      });
+    }
+
+    await updateAssetLockedAndUnlocked(status, id);
+    return res.status(200).send({
+      success: true,
+      msg: `${status} asset successfully `,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(201).send({
+      success: false,
+      msg: Msg.err,
+    });
+  }
+};
+
+export const deleteUserAsset = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const asset = await fetchAssetsById(id);
+    if (asset.length <= 0) {
+      return res.status(201).send({
+        success: false,
+        msg: Msg.assetExists,
+      });
+    }
+
+    await deleteAssetsById(id);
+
+    await deleteAssetsImagesById(id);
+
+    return res.status(200).json({
+      success: true,
+      msg: Msg.assetDeleted,
+    });
+  } catch (error) {
+    console.log(error);
     return res.status(201).send({
       success: false,
       msg: Msg.err,
@@ -595,6 +707,14 @@ export const editProfile = async (req, res) => {
 export const deleteProfile = async (req, res) => {
   try {
     const { userId } = req.decoded;
+    const user = await fetchUserById(userId)
+    if (user.length<= 0) {
+      return res.status(201).send({
+        success: false,
+        msg: Msg.userNotFound,
+      });
+      
+    }
     try {
       await deleteUserById(userId);
       await deleteAssetsImagesByUserId(userId);
@@ -620,8 +740,7 @@ export const deleteProfile = async (req, res) => {
   }
 };
 
-
-export const getCategoryList = async(req, res)=>{
+export const getCategoryList = async (req, res) => {
   try {
     const resp = await getCategoriesList();
     const filteredResp = resp.map(({ id, categoryName }) => ({
@@ -629,52 +748,52 @@ export const getCategoryList = async(req, res)=>{
       categoryName,
     }));
     return res.status(200).json(filteredResp);
-
-    
   } catch (error) {
     console.log(error);
     return res.status(201).send({
       success: false,
       msg: Msg.err,
     });
-    
   }
-}
+};
 
 
-
-export const addCategories = async(req, res)=>{
-  try {
-    const {categoryName, categoryImage} = req.body
-    const imgPath = req.file.filename
-    let obj = {
-      categoryName,
-      categoryImage: imgPath
+export const getSubCategoriesListById= async(req, res)=>{
+   try {
+    const {id} = req.query;
+    const category = await getCategoriesById(id)
+    if (category.length <=0) {
+      return res.status(201). send({
+        success: true,
+        msg:Msg.catgoryExists,
+  
+      })
+      
     }
     
-    await insertCategories(obj)
-    return res.status(201).send({
+    const subCategory = await getSubCategories(id)
+
+    return res.status(200). send({
       success: true,
-   
-    });
-  } catch (error) {
+      msg:subCategory,
+
+    })
+    
+   } catch (error) {
     console.log(error);
     return res.status(201).send({
       success: false,
       msg: Msg.err,
     });
     
-    
-  }
-
+   }
 }
 
 
 
-export const allCategoriesAndCount= async(req, res)=>{
+export const allCategoriesAndCount = async (req, res) => {
   try {
-    const categoryList = await getCategoriesList()
-
+    const categoryList = await getCategoriesList();
 
     const categoryDetails = await Promise.all(
       categoryList.map(async (category) => {
@@ -682,16 +801,46 @@ export const allCategoriesAndCount= async(req, res)=>{
         return {
           id: category.id,
           categoryName: category.categoryName,
-          categoryImage: `${base_url}/temp/${category.categoryImage}` ,
+          categoryImage: `${base_url}/temp/${category.categoryImage}`,
           totalItems: assetsCount,
         };
       })
     );
 
     console.log(categoryDetails);
-    return res.status(200).json({success: true, categoryDetails});
-     
-    
+    return res.status(200).json({ success: true, categoryDetails });
+  } catch (error) {
+    console.log(error);
+    return res.status(201).send({
+      success: false,
+      msg: Msg.err,
+    });
+  }
+};
+
+
+
+export const setAssetHideStatus = async(req, res)=>{
+  try {
+    const { status, id } = req.body;
+    const asset = await fetchAssetsById(id);
+
+    if (asset.length <= 0) {
+      return res.status(201).send({
+        success: false,
+        msg: Msg.assetExists,
+      });
+    }
+    try {
+      await updateHidStatusOfAsset(id, status)
+      
+    } catch (error) {
+      console.log(error);
+    }
+    return res.status(200).json({
+      success: true,
+  
+    })
   } catch (error) {
     console.log(error);
     return res.status(201).send({
@@ -700,5 +849,44 @@ export const allCategoriesAndCount= async(req, res)=>{
     });
     
   }
+}
 
+
+
+
+export const addCategories = async (req, res) => {
+  try {
+    const { categoryName, categoryImage } = req.body;
+    const imgPath = req.file.filename;
+    let obj = {
+      categoryName,
+      categoryImage: imgPath,
+    };
+
+    await insertCategories(obj);
+    return res.status(201).send({
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(201).send({
+      success: false,
+      msg: Msg.err,
+    });
+  }
+};
+
+
+export const addSubCategories = async(req, res)=>{
+  try {
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(201).send({
+      success: false,
+      msg: Msg.err,
+    }); 
+    
+    
+  }
 }
