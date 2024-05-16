@@ -16,7 +16,10 @@ import {
   setLockedAndUnlockedStatus,
   deleteUserAsset,
   setAssetHideStatus,
-  getSubCategoriesListById
+  getSubCategoriesListById,
+  addAssetToFavourite,
+  getFavouriteAssets,
+  getProfile
   
 } from "./userController.js";
 
@@ -40,7 +43,10 @@ export const userController = {
     setLockedAndUnlockedStatus,
     deleteUserAsset,
     setAssetHideStatus,
-    getSubCategoriesListById
+    getSubCategoriesListById,
+    addAssetToFavourite,
+    getFavouriteAssets,
+    getProfile
 };
 
 

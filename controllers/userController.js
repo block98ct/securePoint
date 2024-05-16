@@ -33,6 +33,7 @@ import {
   updateProfileNameStatus,
   updateHidStatusOfAsset,
   updateAssetLockedAndUnlocked,
+  updateFavourite,
   deleteAssetsByUserId,
   deleteAssetsImagesByUserId,
   deleteAssetsById,
@@ -54,7 +55,7 @@ export const registerUserByEmail = async (req, res) => {
     const userResp = await fetchUserByEmail(email);
 
     if (userResp.length > 0) {
-      return res.status(201).send({
+      return res.status(400).send({
         success: false,
         msg: Msg.emailExists,
       });
@@ -73,7 +74,7 @@ export const registerUserByEmail = async (req, res) => {
       .json({ success: true, message: Msg.otpSent, data: otp });
   } catch (error) {
     console.error("Error sending OTP:", error);
-    return res.status(201).json({ success: false, message: Msg.err });
+    return res.status(500).json({ success: false, message: Msg.err });
   }
 };
 
@@ -83,7 +84,7 @@ export const registerUserByNumber = async (req, res) => {
     const userResp = await fetchUserByNumber(number);
 
     if (userResp.length > 0) {
-      return res.status(201).send({
+      return res.status(400).send({
         success: false,
         msg: Msg.numberExists,
       });
@@ -101,7 +102,7 @@ export const registerUserByNumber = async (req, res) => {
       .json({ success: true, message: Msg.otpSent, data: otp });
   } catch (error) {
     console.error("Error sending OTP:", error);
-    return res.status(201).json({ success: false, message: Msg.err });
+    return res.status(500).json({ success: false, message: Msg.err });
   }
 };
 
@@ -113,12 +114,12 @@ export const verifyOtp = async (req, res) => {
       const user = await fetchUserByEmail(email);
       if (!user) {
         return res
-          .status(201)
+          .status(400)
           .json({ success: false, message: Msg.inValidEmail });
       }
       if (user[0].otp !== otp) {
         return res
-          .status(201)
+          .status(400)
           .json({ success: false, message: Msg.invalidOtp });
       }
       let obj = {
@@ -130,12 +131,12 @@ export const verifyOtp = async (req, res) => {
       const userByNumber = await fetchUserByNumber(number);
       if (!userByNumber) {
         return res
-          .status(201)
+          .status(400)
           .json({ success: false, message: Msg.inValidEmail });
       }
       if (userByNumber[0].otp !== otp) {
         return res
-          .status(201)
+          .status(400)
           .json({ success: false, message: Msg.invalidOtp });
       }
       let obj = {
@@ -149,7 +150,7 @@ export const verifyOtp = async (req, res) => {
   } catch (error) {
     console.error(":", error);
     return res
-      .status(201)
+      .status(500)
       .json({ success: false, message: Msg.failedToResest });
   }
 };
@@ -161,14 +162,14 @@ export const setPassword = async (req, res) => {
       const userResp = await fetchUserByEmail(email);
 
       if (userResp[0].isVerified == 0) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.notVerifyAccount,
         });
       }
 
       if (userResp.length == 0) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.inValidEmail,
         });
@@ -176,7 +177,7 @@ export const setPassword = async (req, res) => {
 
       if (password !== confirmPassword) {
         return res
-          .status(201)
+          .status(400)
           .json({ success: false, message: Msg.pwdNotMatch });
       }
 
@@ -190,14 +191,14 @@ export const setPassword = async (req, res) => {
       const userResp = await fetchUserByNumber(number);
 
       if (userResp[0].isVerified == 0) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.notVerifyAccount,
         });
       }
 
       if (userResp.length == 0) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.inValidEmail,
         });
@@ -205,7 +206,7 @@ export const setPassword = async (req, res) => {
 
       if (password !== confirmPassword) {
         return res
-          .status(201)
+          .status(400)
           .json({ success: false, message: Msg.pwdNotMatch });
       }
 
@@ -221,7 +222,7 @@ export const setPassword = async (req, res) => {
   } catch (error) {
     console.error(":", error);
     return res
-      .status(201)
+      .status(500)
       .json({ success: false, message: Msg.failedToResest });
   }
 };
@@ -232,28 +233,28 @@ export const userLogin = async (req, res) => {
   try {
     if (email) {
       if (!email || !password) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.allFieldsRequired,
         });
       }
       userResp = await fetchUserByEmail(email);
       if (userResp.length == 0) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.inValidEmail,
         });
       }
 
       if (userResp[0].email !== email) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.invalidCread,
         });
       }
 
       if (userResp[0].status == 0) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.accountDeactiveated,
         });
@@ -264,7 +265,7 @@ export const userLogin = async (req, res) => {
       let checkPassword = await bcrypt.compare(password, Password);
 
       if (!checkPassword) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.invalidCread,
         });
@@ -281,28 +282,28 @@ export const userLogin = async (req, res) => {
       await setLoginStatus(obj);
     } else {
       if (!number || !password) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.allFieldsRequired,
         });
       }
       userResp = await fetchUserByNumber(number);
       if (userResp.length == 0) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.inValidNumber,
         });
       }
 
       if (userResp[0].contactNumber !== number) {
-        return res.success(201).send({
+        return res.success(400).send({
           success: false,
           msg: Msg.invalidCread,
         });
       }
 
       if (userResp[0].status == 0) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.accountDeactiveated,
         });
@@ -313,7 +314,7 @@ export const userLogin = async (req, res) => {
       let checkPassword = await bcrypt.compare(password, Password);
 
       if (!checkPassword) {
-        return res.status(201).send({
+        return res.status(400).send({
           success: false,
           msg: Msg.invalidCread,
         });
@@ -338,7 +339,7 @@ export const userLogin = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -374,7 +375,7 @@ export const addAssets = async (req, res) => {
         coordinates,
       ].some((field) => field?.trim() === "")
     ) {
-      return res.status(201).send({
+      return res.status(400).send({
         success: false,
         msg: Msg.allFieldsRequired,
       });
@@ -386,7 +387,7 @@ export const addAssets = async (req, res) => {
     const imgPaths = req.files.map((file) => file.filename);
     console.log(imgPaths);
     if (!imgPaths) {
-      return res.status(201).send({
+      return res.status(400).send({
         success: false,
         msg: Msg.imgePath,
       });
@@ -424,7 +425,7 @@ export const addAssets = async (req, res) => {
     return res.status(200).json({ success: true, msg: Msg.assetAdded });
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       status: false,
       msg: Msg.err,
     });
@@ -446,6 +447,7 @@ export const updateUserAssetDetails = async (req, res) => {
       status,
       promote,
       coordinates,
+      imgId,
     } = req.body;
 
     console.log(req.body);
@@ -468,8 +470,6 @@ export const updateUserAssetDetails = async (req, res) => {
       coordinates: coordinates || existingAssets[0].coordinates,
     };
 
-    console.log(updatedAsset);
-    console.log(id);
 
     try {
       await updateAssetDetails(updatedAsset, id);
@@ -480,7 +480,7 @@ export const updateUserAssetDetails = async (req, res) => {
     return res.status(200).json({ success: true });
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -525,7 +525,80 @@ export const getAssetDetails = async (req, res) => {
 
     return res.status(200).json({ success: true, data: mergedAssets });
   } catch (error) {
-    return res.status(201).send({
+    return res.status(500).send({
+      success: false,
+      msg: Msg.err,
+    });
+  }
+};
+
+
+export const addAssetToFavourite= async(req, res)=>{
+  try {
+    const {id, status} = req.body;
+    
+    try {
+      await updateFavourite(status, id)
+      
+    } catch (error) {
+      console.log(error);
+    }
+    return res.status(200).send({
+      success: true
+    })
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      msg: Msg.err,
+    });
+    
+  }
+}
+
+
+export const getFavouriteAssets = async (req, res) => {
+  try {
+    const { userId } = req.decoded;
+
+    const resp = await fetchUserAssetsById(userId);
+    const assetResp = await fetchUserAssetsImagesById(userId);
+
+    const mergedAssets = [];
+    for (const asset of resp) {
+      const images = assetResp
+        .filter((img) => img.assetId === asset.id)
+        .map((img) => ({
+          id: img.id,
+          images: `${base_url}/temp/${img.images}`, // Concatenate base URL with image name
+          userId: img.userId,
+          assetId: img.assetId,
+        }));
+      
+      const createdAt = new Date(asset.createdAt);
+      const monthYear = `${createdAt.toLocaleString('default', { month: 'short' })} ${createdAt.getFullYear()}`;
+      
+      // Fetch category name based on category ID
+      const category = await getCategoriesById(asset.category);
+      const subCategory = await getSubCategoriesById(asset.subCategory);
+
+      //const favourite = asset.favourite === 1;
+
+      mergedAssets.push({
+        ...asset,
+        createdAt: monthYear,
+        category: category[0].categoryName,
+        subCategory: subCategory[0].subCategory,
+        images,
+        favourite: asset.favourite, // Include the favourite property in the response
+      });
+    }
+
+    // Filter assets where favourite is true
+    const favouriteAssets = mergedAssets.filter(asset => asset.favourite ==1);
+
+    return res.status(200).json({ success: true, data: favouriteAssets });
+  } catch (error) {
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -538,7 +611,7 @@ export const getAssetsByCategory = async (req, res) => {
     const { category } = req.query;
     const assets = await fetchAssetsByCategory(category);
     if (assets.length <= 0) {
-      return res.status(201).json({
+      return res.status(400).json({
         success: false,
         msg: Msg.catgoryExists
       });
@@ -573,13 +646,39 @@ export const getAssetsByCategory = async (req, res) => {
 
     return res.status(200).json({ success: true, data: assetsWithImages });
   } catch (error) {
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
   }
 };
 
+export const getProfile =  async(req, res)=>{
+  try {
+    const { userId } = req.decoded;
+    const userResp = await fetchUserById(userId);
+
+    const formattedLastLogin = new Date(userResp[0].lastlogin);
+    const monthYear = `${formattedLastLogin.toLocaleString('default', { month: 'long' })} ${formattedLastLogin.getFullYear()}`;
+
+    const { password, isVerified, otp, ...filteredUserResp } = userResp[0];
+
+    filteredUserResp.lastlogin = monthYear;
+
+    return res.status(200).json({
+      success: true,
+      msg: filteredUserResp,
+    });
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      msg: Msg.err,
+    });
+    
+  }
+}
 export const editProfile = async (req, res) => {
   try {
     const { userId } = req.decoded;
@@ -597,7 +696,7 @@ export const editProfile = async (req, res) => {
         await updateProfileName(name, userId);
       } catch (error) {
         console.log(error);
-        return res.status(201).json({
+        return res.status(400).json({
           success: false,
           msg: Msg.errorUpdatingName,
         });
@@ -614,7 +713,7 @@ export const editProfile = async (req, res) => {
         await updateProfileDp(obj);
       } catch (error) {
         console.log(error);
-        return res.status(201).json({
+        return res.status(400).json({
           success: false,
           msg: Msg.errorUpdatingDp,
         });
@@ -643,7 +742,7 @@ export const editProfile = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -656,7 +755,7 @@ export const setLockedAndUnlockedStatus = async (req, res) => {
 
     const asset = await fetchAssetsById(id);
     if (asset.length <= 0) {
-      return res.status(201).send({
+      return res.status(400).send({
         success: false,
         msg: Msg.assetExists,
       });
@@ -669,7 +768,7 @@ export const setLockedAndUnlockedStatus = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -681,7 +780,7 @@ export const deleteUserAsset = async (req, res) => {
     const { id } = req.body;
     const asset = await fetchAssetsById(id);
     if (asset.length <= 0) {
-      return res.status(201).send({
+      return res.status(400).send({
         success: false,
         msg: Msg.assetExists,
       });
@@ -697,7 +796,7 @@ export const deleteUserAsset = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -709,7 +808,7 @@ export const deleteProfile = async (req, res) => {
     const { userId } = req.decoded;
     const user = await fetchUserById(userId)
     if (user.length<= 0) {
-      return res.status(201).send({
+      return res.status(400).send({
         success: false,
         msg: Msg.userNotFound,
       });
@@ -733,7 +832,7 @@ export const deleteProfile = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -750,7 +849,7 @@ export const getCategoryList = async (req, res) => {
     return res.status(200).json(filteredResp);
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -763,7 +862,7 @@ export const getSubCategoriesListById= async(req, res)=>{
     const {id} = req.query;
     const category = await getCategoriesById(id)
     if (category.length <=0) {
-      return res.status(201). send({
+      return res.status(400). send({
         success: true,
         msg:Msg.catgoryExists,
   
@@ -781,7 +880,7 @@ export const getSubCategoriesListById= async(req, res)=>{
     
    } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -811,7 +910,7 @@ export const allCategoriesAndCount = async (req, res) => {
     return res.status(200).json({ success: true, categoryDetails });
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -826,7 +925,7 @@ export const setAssetHideStatus = async(req, res)=>{
     const asset = await fetchAssetsById(id);
 
     if (asset.length <= 0) {
-      return res.status(201).send({
+      return res.status(400).send({
         success: false,
         msg: Msg.assetExists,
       });
@@ -843,7 +942,7 @@ export const setAssetHideStatus = async(req, res)=>{
     })
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -864,12 +963,12 @@ export const addCategories = async (req, res) => {
     };
 
     await insertCategories(obj);
-    return res.status(201).send({
+    return res.status(200).send({
       success: true,
     });
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     });
@@ -882,7 +981,7 @@ export const addSubCategories = async(req, res)=>{
     
   } catch (error) {
     console.log(error);
-    return res.status(201).send({
+    return res.status(500).send({
       success: false,
       msg: Msg.err,
     }); 

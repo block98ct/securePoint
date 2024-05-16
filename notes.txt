@@ -1,0 +1,9 @@
+USERS
+              0                            1
+nameStatus:  hide (by default)            unhide
+
+ASSETS
+hideStatus:  hide                         unhide
+
+favourites:  no                           Yes
+

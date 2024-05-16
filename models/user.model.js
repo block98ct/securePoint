@@ -59,6 +59,9 @@ export const  updatePasswordByEmail = async (obj) => {
   ]);
 };
 
+export const  updateFavourite = async(favourite, id)=>{
+   return db.query("UPDATE assets SET favourite  = ? WHERE id = ?", [favourite,id])
+}
 
 
 export const  updatePasswordByNumber = async (obj) => {
@@ -96,7 +99,6 @@ export const assetImages = async()=>{
  }
 
 
-
 export const addDataInAssets= async(obj)=>{
   return db.query(`insert into assets set ?`, [obj]);
 
@@ -130,7 +132,6 @@ export const updateProfileNotes = async (userId, notes) => {
 
 
 export const updateProfileNameStatus = async (userId, status) => {
-
   return db.query(`UPDATE users SET nameStatus = ? WHERE id = ?`, [status, userId]);
 };
 

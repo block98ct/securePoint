@@ -20,11 +20,13 @@ app.post('/setLockAndUnlocked', authenticateToken,  handleValidationErrors,  use
 app.post('/setHideStatus', authenticateToken,  handleValidationErrors,  userController.setAssetHideStatus)
 
 
-
+app.post('/addToFavourite', authenticateToken,  handleValidationErrors,  userController.addAssetToFavourite)
+app.get('/getFavouriteAssets', authenticateToken,  handleValidationErrors,  userController.getFavouriteAssets)
 
 
 app.post('/editProfile', authenticateToken,  handleValidationErrors, upload.single('dp'), userController.editProfile)
 app.delete('/deleteProfile', authenticateToken,  handleValidationErrors, userController.deleteProfile)
+app.get('/getProfile', authenticateToken,  handleValidationErrors, userController.getProfile)
 
 app.delete('/deleteUserAsset', authenticateToken,  handleValidationErrors, userController.deleteUserAsset)
 
@@ -38,6 +40,7 @@ app.get('/subCategoriesList', authenticateToken,  handleValidationErrors,  userC
 
 
 app.get('/allCategoriesCount', authenticateToken,  handleValidationErrors,  userController.allCategoriesAndCount)
+
 
 
 
