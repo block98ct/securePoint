@@ -161,8 +161,14 @@ export const deleteAssetsById = async(userId)=>{
 }
 
 
-export const deleteAssetsImagesById = async(assetId)=>{
+export const deleteAssetsImagesByAssetId = async(assetId)=>{
   return db.query(`DELETE FROM assetimages  WHERE assetId = ?`, [assetId])
+ 
+}
+
+
+export const deleteAssetsImagesById = async(id)=>{
+  return db.query(`DELETE FROM assetimages  WHERE id = ?`, [id])
  
 }
 
