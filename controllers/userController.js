@@ -46,16 +46,19 @@ import {
   getAssetsCountByCategory,
   getSubCategories,
   getCategoriesById,
-  getSubCategoriesById
+  getSubCategoriesById,
+  getActiveListingCount,
+  getUsersFavouriteAssets
+
 } from "../models/user.model.js";
 import { body } from "express-validator";
 
 
-const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID
-const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN
-const twilioPhoneNumber = process.env.TWILIO_PHONENUMBER
+// const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID
+// const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN
+// const twilioPhoneNumber = process.env.TWILIO_PHONENUMBER
 
-const twilioClient = new twilio(twilioAccountSid, twilioAuthToken)
+// const twilioClient = new twilio(twilioAccountSid, twilioAuthToken)
 
 export const registerUserByEmail = async (req, res) => {
   try {
@@ -103,18 +106,18 @@ export const registerUserByNumber = async (req, res) => {
       otp
     };
 
- try {
-     await twilioClient.messages.create({
-        body: `Your OTP is: ${otp}`,
-        to: number,
-        from: twilioPhoneNumber
-     })
- } catch (error) {
-  console.log(error);
+//  try {
+//      await twilioClient.messages.create({
+//         body: `Your OTP is: ${otp}`,
+//         to: number,
+//         from: twilioPhoneNumber
+//      })
+//  } catch (error) {
+//   console.log(error);
   
- }
+//  }
 
-    //await userRegister(obj);
+  await userRegister(obj);
 
     return res
       .status(200)
@@ -127,10 +130,12 @@ export const registerUserByNumber = async (req, res) => {
 
 export const verifyOtp = async (req, res) => {
   const { email, otp, number } = req.body;
+  console.log("number", number);
 
   try {
     if (email) {
       const user = await fetchUserByEmail(email);
+      console.log(user)
       if (!user) {
         return res
           .status(400)
@@ -148,10 +153,11 @@ export const verifyOtp = async (req, res) => {
       await updateUserOtpToVerifiedByEmail(obj);
     } else {
       const userByNumber = await fetchUserByNumber(number);
-      if (!userByNumber) {
+      console.log("user by number:", userByNumber)
+      if (userByNumber.length <= 0) {
         return res
           .status(400)
-          .json({ success: false, message: Msg.inValidEmail });
+          .json({ success: false, message: Msg.inValidNumber });
       }
       if (userByNumber[0].otp !== otp) {
         return res
@@ -170,7 +176,7 @@ export const verifyOtp = async (req, res) => {
     console.error(":", error);
     return res
       .status(500)
-      .json({ success: false, message: Msg.failedToResest });
+      .json({ success: false, message: Msg.err });
   }
 };
 
@@ -290,7 +296,7 @@ export const userLogin = async (req, res) => {
         });
       }
       const id = { userId: userResp[0].id };
-      token = jwt.sign(id, secretKey, { expiresIn: "1h" });
+      token = jwt.sign(id, secretKey, { expiresIn: "1d" });
 
       const lastlogin = new Date();
       let obj = {
@@ -585,15 +591,20 @@ export const getAssetDetails = async (req, res) => {
 
 export const addAssetToFavourite = async (req, res) => {
   try {
-    const { id, status } = req.body;
-
+    const  {userId} = req.decoded
+    const { assetId } = req.body;
+    let obj ={
+      userId,
+      assetId
+    }
     try {
-      await updateFavourite(status, id);
+      await updateFavourite(obj);
     } catch (error) {
       console.log(error);
     }
     return res.status(200).send({
-      success: true
+      success: true,
+      msg: "asset added to favourites "
     });
   } catch (error) {
     return res.status(500).send({
@@ -606,46 +617,48 @@ export const addAssetToFavourite = async (req, res) => {
 export const getFavouriteAssets = async (req, res) => {
   try {
     const { userId } = req.decoded;
+ 
+    const  favouriteAssets = await getUsersFavouriteAssets(userId)
 
-    const resp = await fetchUserAssetsById(userId);
-    const assetResp = await fetchUserAssetsImagesById(userId);
+    // const resp = await fetchUserAssetsById(userId);
+    // const assetResp = await fetchUserAssetsImagesById(userId);
 
-    const mergedAssets = [];
-    for (const asset of resp) {
-      const images = assetResp
-        .filter((img) => img.assetId === asset.id)
-        .map((img) => ({
-          id: img.id,
-          images: `${base_url}/temp/${img.images}`, // Concatenate base URL with image name
-          userId: img.userId,
-          assetId: img.assetId
-        }));
+    // const mergedAssets = [];
+    // for (const asset of resp) {
+    //   const images = assetResp
+    //     .filter((img) => img.assetId === asset.id)
+    //     .map((img) => ({
+    //       id: img.id,
+    //       images: `${base_url}/temp/${img.images}`, // Concatenate base URL with image name
+    //       userId: img.userId,
+    //       assetId: img.assetId
+    //     }));
 
-      const createdAt = new Date(asset.createdAt);
-      const monthYear = `${createdAt.toLocaleString("default", {
-        month: "short"
-      })} ${createdAt.getFullYear()}`;
+    //   const createdAt = new Date(asset.createdAt);
+    //   const monthYear = `${createdAt.toLocaleString("default", {
+    //     month: "short"
+    //   })} ${createdAt.getFullYear()}`;
 
-      // Fetch category name based on category ID
-      const category = await getCategoriesById(asset.category);
-      const subCategory = await getSubCategoriesById(asset.subCategory);
+    //   // Fetch category name based on category ID
+    //   const category = await getCategoriesById(asset.category);
+    //   const subCategory = await getSubCategoriesById(asset.subCategory);
 
-      //const favourite = asset.favourite === 1;
+    //   //const favourite = asset.favourite === 1;
 
-      mergedAssets.push({
-        ...asset,
-        createdAt: monthYear,
-        category: category[0].categoryName,
-        subCategory: subCategory[0].subCategory,
-        images,
-        favourite: asset.favourite // Include the favourite property in the response
-      });
-    }
+    //   mergedAssets.push({
+    //     ...asset,
+    //     createdAt: monthYear,
+    //     category: category[0].categoryName,
+    //     subCategory: subCategory[0].subCategory,
+    //     images,
+    //     favourite: asset.favourite // Include the favourite property in the response
+    //   });
+    // }
 
-    // Filter assets where favourite is true
-    const favouriteAssets = mergedAssets.filter(
-      (asset) => asset.favourite == 1
-    );
+    // // Filter assets where favourite is true
+    // const favouriteAssets = mergedAssets.filter(
+    //   (asset) => asset.favourite == 1
+    // );
 
     return res.status(200).json({ success: true, data: favouriteAssets });
   } catch (error) {
@@ -711,8 +724,9 @@ export const getProfile = async (req, res) => {
   try {
     const { userId } = req.decoded;
     const userResp = await fetchUserById(userId);
+    const listingCount = await getActiveListingCount(userId);
 
-    const formattedLastLogin = new Date(userResp[0].lastlogin);
+    const formattedLastLogin = new Date(userResp[0].createdAt);
     const monthYear = `${formattedLastLogin.toLocaleString("default", {
       month: "long"
     })} ${formattedLastLogin.getFullYear()}`;
@@ -720,6 +734,12 @@ export const getProfile = async (req, res) => {
     const { password, isVerified, otp, ...filteredUserResp } = userResp[0];
 
     filteredUserResp.lastlogin = monthYear;
+    filteredUserResp.createdAt = monthYear
+    filteredUserResp.updatedAt = monthYear
+    filteredUserResp.dp = `${base_url}/temp/${filteredUserResp.dp}`
+    filteredUserResp.activeListing = listingCount
+    console.log(filteredUserResp)
+
 
     return res.status(200).json({
       success: true,
