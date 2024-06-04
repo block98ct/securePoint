@@ -1450,11 +1450,9 @@ export const deleteUnverfiedUsers= async(req, res)=>{
         return res.status(200).send({
           success: false,
           message: `Unauthorized action`,
-        });
-        
+        }); 
 
       }
-  
       try {
         
         await deleteUserById(userResp[0].id)
