@@ -9,8 +9,8 @@ import {
   getAssetDetails,
   getAssetsByCategory,
   editProfile,
-  deleteProfile,
-  addCategories,
+
+  deleteUnverfiedUsers,
   getCategoryList,
   allCategoriesAndCount,
   setLockedAndUnlockedStatus,
@@ -19,11 +19,14 @@ import {
   getSubCategoriesListById,
   addAssetToFavourite,
   getFavouriteAssets,
-  getProfile
+  getProfile,
+  getAllAssetDetails,
+  getUserProfileAndAssets,
+  randomAssetDetails
   
 } from "./userController.js";
 
-//import {} from "./userController.js"
+
 
 export const userController = {
     registerUserByEmail,
@@ -36,8 +39,7 @@ export const userController = {
     getAssetDetails,
     getAssetsByCategory,
     editProfile,
-    deleteProfile,
-    addCategories,
+    deleteUnverfiedUsers,
     getCategoryList,
     allCategoriesAndCount,
     setLockedAndUnlockedStatus,
@@ -46,12 +48,29 @@ export const userController = {
     getSubCategoriesListById,
     addAssetToFavourite,
     getFavouriteAssets,
-    getProfile
+    getProfile,
+    getAllAssetDetails,
+    getUserProfileAndAssets,
+    randomAssetDetails
 };
 
 
+import { sendMessage} from "./chatController.js"
+export const chatController={
+  sendMessage
 
-// export const adminController={
+}
 
-// }
+
+
+
+import {addCategories, addSubCategories} from "../controllers/adminController.js"
+
+export const adminController = {
+  addCategories,
+  addSubCategories
+
+}
+
+
 

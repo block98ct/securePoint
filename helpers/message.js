@@ -2,6 +2,7 @@
 // Define your messages
 const messages = {
     emailExists: "Email address already registered. Please use a different email.",
+    userDeletd: 'User deleted successfully',
     numberExists: "Number already registered. Please use a different Number.",
     verifyYourEmail: "Please verify your account with the email we have sent to your email address ",  
     notVerifyAccount: "Your account has been not verify firstly verify your account !!",
@@ -14,7 +15,7 @@ const messages = {
     inValidPassword: "Invalid password.",
     inValidEmail: "Email address not found. Please enter a valid email",
     inValidNumber: "number not found. Please enter a valid number",
-    pwdResetLink: "Password reset link sent successfully. Please check your email ",
+    pwdResetLink: "Password reset link sent successfully. Please check your email ", 
     invalidLink: "invalid link",
     passMatch: 'Password did not match',
     err: "Internal server error",

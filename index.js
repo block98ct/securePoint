@@ -8,6 +8,7 @@ import route from "./routes/index.js";
 import { Server } from "socket.io";
 import "dotenv/config.js";
 const app = express();
+let tempArray = new Map();
 
 const server = http.createServer(app);
 const io = new Server(server);
@@ -25,12 +26,20 @@ app.use("/api", route);
 let port = process.env.PORT || 5005;
 // "192.168.29.216"
 
-io.on("connection", (socket) => {
-  console.log("a user connected");
-  console.log(`socket id ${socket.id}`);
+// let onlineUsers = new Map();
+
+io.on('connection', (socket) => {
+  const userId = socket.handshake.query.userId; // Get user ID from query parameters
+  console.log(userId);
+
+  console.log('a user connected');
+  console.log(`user id ${socket.id}`);
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
 });
 
-
-server.listen(port, "192.168.1.12", () => {
+server.listen(port, "192.168.1.19", () => {
   console.log(`Server started at http://localhost:${port}`); // Log server start message with port number
 });
