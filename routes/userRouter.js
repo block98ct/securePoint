@@ -10,6 +10,7 @@ app.post('/userRegisterByNumber', handleValidationErrors, userController.registe
 
 
 app.post('/verifyOtp', handleValidationErrors, userController.verifyOtp)
+app.post('/sendOtpForPassword', handleValidationErrors, userController.sendOtpForPasswordVerfiy)
 app.post('/setPassword', handleValidationErrors, userController.setPassword)
 app.post('/userLogin', handleValidationErrors, userController.userLogin)
 app.post('/addAssets', authenticateToken,  handleValidationErrors, upload.array('images', 4), userController.addAssets)

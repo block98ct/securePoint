@@ -1,7 +1,7 @@
 import db from "../utils/db.js";
 
 export const userRegister = async (userData) => {
-  return db.query("INSERT INTO users SET ?", [userData]);
+  return db.query("INSERT INTO users SET ?", [userData]);  
 };
 
 export const addAssetImges = async (data) => {
@@ -33,6 +33,18 @@ export const fetchAllUsers= async () => {
 };
 
 
+export const fetchAllUsersDesc= async () => {
+  return db.query(`SELECT * FROM users ORDER BY id DESC`);
+};
+
+// SELECT * FROM logs ORDER BY id DESC`
+
+export const allUsersCount= async () => {
+  return db.query(`SELECT COUNT(*) AS totalUsers  FROM users`);
+};
+
+
+
 export const fetchAssetsById = async (ids) => {
   if (ids.length === 0) {
     return [];
@@ -56,6 +68,30 @@ export const fetchUserAssetsImagesById = async (id) => {
 export const fetchAllUserAssetsImages = async () => {
   return db.query(`SELECT * FROM assetimages`);
 };
+
+
+export const fetchUserFavouriteAssetsByAssetId= async(userId, assetId)=>{
+    return db.query(`SELECT * FROM favoritesAssets WHERE userId = ? AND assetId = ?`, [userId, assetId]);
+}
+
+
+export const updateOtpByEmail = async (obj) => {
+  return db.query("UPDATE users SET otp = ? WHERE email = ?", [
+    obj.otp,
+    obj.email,
+  ]);
+};
+
+
+
+export const updateOtpByNumber = async (obj) => {
+  return db.query("UPDATE users SET otp = ? WHERE contactNumber = ?", [
+    obj.otp,
+    obj.number,
+  ]);
+};
+
+
 
 
 export const updateUserOtpToVerifiedByEmail = async (obj) => {
@@ -201,7 +237,7 @@ export const getCategoriesById = async (id) => {
 };
 export const getFavouriteAssetsByUserIdAndAssetId = async (userId, assetId) => {
   const query = `SELECT * FROM favoritesAssets WHERE userId = ? AND assetId = ?`;
-  return db.query(query, [userId, assetId]);
+  return db.query(query, [userId, assetId]);     
 };
 
 
@@ -230,35 +266,6 @@ export const getActiveListingCount = async (id) => {
   );
   return rows.hideStatusCount;
 };
-
-
-// export const getUsersFavouriteAssets = async(id)=>{
-  
-//   try {
-//     const query = `
-//       SELECT 
-//         assets.*, 
-//         assetimages.images AS assetimages
-//       FROM 
-//         assets
-//       JOIN 
-//         favoritesAssets ON assets.id = favoritesAssets.assetId
-//       JOIN 
-//         assetimages ON assets.id = assetimages.assetId
-//       WHERE 
-//         favoritesAssets.userId = ?
-//     `;
-//     console.log(await db.query(query, [id]))
-//     return db.query(query, [id]);
-    
-//   } catch (error) {
-//     console.log(error);
-//   }
-
-// }
-
-//
-
 
 
 export const getUsersFavouriteAssetsByUserId = async(userId)=>{

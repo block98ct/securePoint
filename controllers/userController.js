@@ -4,14 +4,14 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import Msg from "../helpers/message.js";
 import { mail } from "../helpers/emailOtp.js";
-import fs from "fs";
+
 import { base_url } from "../config.js";
 // import twilio from "twilio";
 
 import { paginate } from "../utils/pagination.js";
 const secretKey = process.env.JWT_SECRET_KEY;
 
-import { hashPassword, generateOTP } from "../helpers/middleware.js";
+import { hashPassword, generateOTP } from "../helpers/middleware.js";  
 import {
   fetchUserByEmail,
   removeFavourite,
@@ -34,6 +34,7 @@ import {
   fetchAllUserAssetsImages,
   fetchAllUserAssets,
   fetchAllUsers,
+  fetchUserFavouriteAssetsByAssetId,
   addAssetImges,
   assetImages,
   updateProfileName,
@@ -43,6 +44,8 @@ import {
   updateHidStatusOfAsset,
   updateAssetLockedAndUnlocked,
   updateFavourite,
+  updateOtpByEmail,
+  updateOtpByNumber,
   deleteAssetsImagesByUserId,
   deleteAssetsById,
   deleteAssetsImagesByAssetId,
@@ -57,6 +60,9 @@ import {
   getUsersFavouriteAssetsByUserId,
   getFavouriteAssetsByUserIdAndAssetId,
 } from "../models/user.model.js";
+
+
+
 
 // const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID
 // const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN
@@ -104,7 +110,6 @@ export const filterAssets = (req, assets, filters) => {
   });
 };
 
-
 export const registerUserByEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -117,7 +122,9 @@ export const registerUserByEmail = async (req, res) => {
       });
     }
     const otp = await generateOTP();
-    await mail(email, otp);
+    const imgUrl =`http://3.222.163.144:4000/mainLogo.png`
+    await mail(email, otp, 'Activate Account', 'otpVerification', imgUrl);
+
     let obj = {
       email,
       otp,
@@ -173,6 +180,7 @@ export const registerUserByNumber = async (req, res) => {
   }
 };
 
+
 export const verifyOtp = async (req, res) => {
   const { email, otp, number } = req.body;
   console.log("number", number);
@@ -223,6 +231,74 @@ export const verifyOtp = async (req, res) => {
   }
 };
 
+export const sendOtpForPasswordVerfiy = async(req, res)=>{
+  try {
+    const { email, number} = req.body
+    let userResp
+    const otp = await generateOTP();
+
+    if (email) {
+       userResp = await fetchUserByEmail(email);
+      if (userResp.length == 0) {
+        return res.status(400).send({
+          success: false,
+          message: Msg.inValidEmail,
+        });
+      }
+      // const msg = `reset password`
+      // await mail(email, otp, msg);
+      // let mailOptions = {
+      //   from: "mkdteamti@gmail.com",
+      //   to: email,
+      //   subject: "Forgot Password",
+      //   template: "forgetPassword",
+      //   context: {
+      //     otp: otp,
+      //     imgUrl: `http://3.222.163.144:4000/mainLogo.png`
+      //   },
+      // };
+      
+      // transporter.sendMail(mailOptions).then((res)=> console.log("resc----->",res))
+      //                                  .catch(err => console.log('err------>',err))
+
+      const imgUrl =`http://3.222.163.144:4000/mainLogo.png`
+      await mail(email, otp, 'Forgot Password', 'otpVerification', imgUrl);
+      let obj = {
+        email,
+        otp,
+      };
+       
+      await updateOtpByEmail(obj)
+      
+    }
+
+    if (number) {
+      userResp = await fetchUserByNumber(number);
+      if (userResp.length == 0) {
+        return res.status(400).send({
+          success: false,
+          message: Msg.inValidNumber,
+        });
+      }
+      let obj = {
+        number,
+        otp,
+      };
+      await updateOtpByNumber(obj)
+
+      
+    }
+
+    return res.status(200).json({ success: true, otp: otp, message: Msg.otpSent });
+
+    
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    return res.status(500).json({ success: false, message: Msg.err });
+  }
+    
+  
+}
 export const setPassword = async (req, res) => {
   try {
     const { email, password, confirmPassword, number } = req.body;
@@ -340,7 +416,7 @@ export const userLogin = async (req, res) => {
         });
       }
       const id = { userId: userResp[0].id };
-      token = jwt.sign(id, secretKey, { expiresIn: "1d" });
+      token = jwt.sign(id, secretKey, { expiresIn: "24h" });
 
       const lastlogin = new Date();
       let obj = {
@@ -389,7 +465,7 @@ export const userLogin = async (req, res) => {
         });
       }
       const id = { userId: userResp[0].id };
-      token = jwt.sign(id, secretKey, { expiresIn: "1h" });
+      token = jwt.sign(id, secretKey, { expiresIn: "24h" });
 
       const lastlogin = new Date();
       let obj = {
@@ -602,12 +678,22 @@ export const addAssetToFavourite = async (req, res) => {
   try {
     const { userId } = req.decoded;
     const { assetId, status } = req.body;
+
     let obj = {
       userId,
       assetId,
     };
     if (status == 1) {
       try {
+        const assetResp = await fetchUserFavouriteAssetsByAssetId(userId, assetId)
+        console.log(assetResp);
+        if (assetResp.length > 0) {
+          return res.status(201).send({
+            success: false,
+            message: "asset already exists in favourite assets",
+          });
+          
+        }
         await updateFavourite(obj);
         return res.status(200).send({
           success: true,
@@ -636,7 +722,6 @@ export const addAssetToFavourite = async (req, res) => {
     });
   }
 };
-
 
 export const getProfile = async (req, res) => {
   try {
@@ -930,8 +1015,9 @@ export const setAssetHideStatus = async (req, res) => {
     });
   }
 };
+export const setHideStatusOfUserProfile = async (req, res) => {
 
-export const setHideStatusOfUserProfile = async (req, res) => {};
+};
 
 // Get ASSETS BY CATEGORY
 export const getAssetsByCategory = async (req, res) => {
@@ -989,10 +1075,18 @@ export const getAssetsByCategory = async (req, res) => {
         };
       })
     );
+    const page = parseInt(req.query.page) || 1;
+   
+    const paginatedAssets = paginate(assetsWithImagesAndUserDetails, page);
 
-    return res
-      .status(200)
-      .json({ success: true, data: assetsWithImagesAndUserDetails });
+    return res.status(200).json({
+      success: true,
+      data: paginatedAssets,
+    });
+
+    // return res
+    //   .status(200)
+    //   .json({ success: true, data: assetsWithImagesAndUserDetails });
   } catch (error) {
     return res.status(500).send({
       success: false,
@@ -1085,7 +1179,7 @@ export const getAllAssetDetails = async (req, res) => {
   }
 };
 
-//  GETALL USER ASSET DETAILS
+//  GETA LL USER ASSET DETAILS
 export const getAssetDetails = async (req, res) => {
   try {
     const { userId } = req.decoded;
@@ -1142,10 +1236,21 @@ export const getAssetDetails = async (req, res) => {
 
     const filters = req.query;
     const filteredAssets = filterAssets(req, mergedAssets, filters);
+    const page = parseInt(req.query.page) || 1;
+
+    const assetsToPaginate =
+      filteredAssets.length > 0 ? filteredAssets : mergedAssets;
+    const paginatedAssets = paginate(assetsToPaginate, page);
+
     return res.status(200).json({
       success: true,
-      data: filteredAssets ? filteredAssets : mergedAssets,
+      data: paginatedAssets,
     });
+    
+    // return res.status(200).json({
+    //   success: true,
+    //   data: filteredAssets ? filteredAssets : mergedAssets,
+    // });
   } catch (error) {
     console.log(error);
     return res.status(500).send({
@@ -1221,8 +1326,10 @@ export const getFavouriteAssets = async (req, res) => {
         };
       })
     );
+    const page = parseInt(req.query.page) || 1;
+    const paginatedAssets = paginate(mergedAssets, page);
 
-    return res.status(200).json({ success: true, data: mergedAssets });
+    return res.status(200).json({ success: true, data: paginatedAssets });
   } catch (error) {
     console.error(error);
     return res.status(500).send({
@@ -1312,12 +1419,16 @@ export const getUserProfileAndAssets = async (req, res) => {
     // Apply filters if any
     const filters = req.query;
     const filteredAssets = filterAssets(req, mergedAssets, filters);
+    const page = parseInt(req.query.page) || 1;
+    const assetsToPaginate =
+      filteredAssets.length > 0 ? filteredAssets : mergedAssets;
+    const paginatedAssets = paginate(assetsToPaginate, page);
 
     // Combine profile information and assets into a single response object
     return res.status(200).json({
       success: true,
       profile: filteredUserResp,
-      assets: filteredAssets ? filteredAssets : mergedAssets,
+      assets: paginatedAssets,
     });
   } catch (error) {
     console.log(error);
@@ -1446,7 +1557,7 @@ export const deleteUnverfiedUsers= async(req, res)=>{
         });
         
       }
-      if(userResp[0].isVerified !==0){
+      if(userResp[0].isVerified !== 0){
         return res.status(200).send({
           success: false,
           message: `Unauthorized action`,
@@ -1473,7 +1584,7 @@ export const deleteUnverfiedUsers= async(req, res)=>{
         });
         
       }
-      if(userResp[0].isVerified !==0){
+      if(userResp[0].isVerified !== 0){
         return res.status(200).send({
           success: false,
           message: `Unauthorized action`,
@@ -1503,3 +1614,5 @@ export const deleteUnverfiedUsers= async(req, res)=>{
     });
   }
 }
+
+

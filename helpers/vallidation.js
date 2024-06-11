@@ -3,7 +3,7 @@ import  { body, validationResult } from 'express-validator'
 
 export const userSighUp = [
     body('email')
-        .isEmail().normalizeEmail().withMessage('Email Must Be Required'),
+        .isEmail().withMessage('Email Must Be Required'),
 
 
 ];

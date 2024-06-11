@@ -28,17 +28,17 @@ let port = process.env.PORT || 5005;
 
 // let onlineUsers = new Map();
 
-io.on('connection', (socket) => {
-  const userId = socket.handshake.query.userId; // Get user ID from query parameters
-  console.log(userId);
+// io.on('connection', (socket) => {
+//   const userId = socket.handshake.query.userId; // Get user ID from query parameters
+//   console.log(userId);
 
-  console.log('a user connected');
-  console.log(`user id ${socket.id}`);
+//   console.log('a user connected');
+//   console.log(`user id ${socket.id}`);
 
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
-});
+//   socket.on('disconnect', () => {
+//     console.log('user disconnected');
+//   });
+// });
 
 server.listen(port, "192.168.1.19", () => {
   console.log(`Server started at http://localhost:${port}`); // Log server start message with port number
